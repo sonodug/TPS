@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TPSGameMode.h"
-#include "../Controller/TPSPlayerController.h"
+#include "../Game/TPSPlayerController.h"
 #include "../Character/TPSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 

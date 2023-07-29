@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WeaponDefault.h"
+#include "../Weapon/WeaponDefault.h"
 #include "GameFramework/Character.h"
 #include "TPS/States.h"
 #include "TPSCharacter.generated.h"
@@ -42,11 +42,13 @@ private:
 	class UDecalComponent* CursorToWorld;
 
 public:
+	//Cursor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cursor")
 	UMaterialInterface* CursorMaterial = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cursor")
 	FVector CursorSize = FVector(20.f, 40.f, 20.f);
-	
+
+	//Movement
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	EMovementState MovementState = EMovementState::E_WalkState;
 	
@@ -59,14 +61,15 @@ public:
 	bool AimEnabled = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	bool CrouchEnabled = false;
+
+	//Weapon	
+	AWeaponDefault* CurrentWeapon = nullptr;
+
+	//for demo 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
+	FName InitWeaponName;
 	
-	float AxisX = 0.f;
-	float AxisY = 0.f;
-
 	UDecalComponent* CurrentCursor = nullptr;
-
-	UFUNCTION()
-	void MovementTick(float DeltaTime);
 	
 	UFUNCTION()
 	void InputAxisX(float Value);
@@ -76,15 +79,37 @@ public:
 	void InputAttackPressed();
 	UFUNCTION()
 	void InputAttackReleased();
+
+	float AxisX = 0.f;
+	float AxisY = 0.f;
+
+	UFUNCTION()
+	void MovementTick(float DeltaTime);
 	
+	//Func
+	UFUNCTION(BlueprintCallable)
+	void AttackCharEvent(bool bIsFiring);
 	UFUNCTION(BlueprintCallable)
 	void CharacterUpdate();
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementState();
 
 	UFUNCTION(BlueprintCallable)
-	void InitWeapon();
-	UFUNCTION(BlueprintCallable)
 	AWeaponDefault* GetCurrentWeapon();
+	UFUNCTION(BlueprintCallable)
+	void InitWeapon(FName IdWeaponName);
+	UFUNCTION(BlueprintCallable)
+	void TryReloadWeapon();
+	UFUNCTION()
+	void WeaponReloadStart(UAnimMontage* Anim);
+	UFUNCTION()
+	void WeaponReloadEnd();
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadStart_BP(UAnimMontage* Anim);
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadEnd_BP();
+
+	UFUNCTION(BlueprintCallable)
+	UDecalComponent* GetCursorToWorld();
 };
 

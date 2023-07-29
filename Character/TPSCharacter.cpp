@@ -15,6 +15,7 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "../Game/WeaponGameInstance.h"
 
 #define START_SPEED 300.f;
 
@@ -93,8 +94,6 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 			CursorToWorld->SetWorldRotation(CursorR);
 		}
 	}*/
-	
-	MovementTick(DeltaSeconds);
 
 	if (CurrentCursor)
 	{
@@ -111,13 +110,15 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 			CurrentCursor->SetWorldRotation(CursorR);
 		}
 	}
+
+	MovementTick(DeltaSeconds);
 }
 
 void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitWeapon();
+	InitWeapon(InitWeaponName);
 
 	if (CursorMaterial)
 	{
@@ -131,24 +132,9 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	InputComponent->BindAxis("MoveForward", this, &ATPSCharacter::InputAxisX);
 	InputComponent->BindAxis("MoveRight", this, &ATPSCharacter::InputAxisY);
-}
-
-void ATPSCharacter::MovementTick(float DeltaTime)
-{
-	AddMovementInput(FVector(1.f, 0, 0), AxisX);
-	AddMovementInput(FVector(0, 1.f, 0), AxisY);
-
-	
-	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (IsValid(PlayerController))
-	{
-		FHitResult HitResult;
-		//Custon ETraceTypeQuery in UE C++ start with 6
-		//PlayerController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, HitResult);
-		PlayerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, false, HitResult);
-		float RotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), HitResult.Location).Yaw;
-		SetActorRotation(FQuat(FRotator(0, RotatorResultYaw,0)));
-	}
+	InputComponent->BindAction(TEXT("FireEvent"), IE_Pressed, this, &ATPSCharacter::InputAttackPressed);
+	InputComponent->BindAction(TEXT("FireEvent"), IE_Released, this, &ATPSCharacter::InputAttackReleased);
+	InputComponent->BindAction(TEXT("ReloadEvent"), IE_Released, this, &ATPSCharacter::TryReloadWeapon);
 }
 
 void ATPSCharacter::InputAxisX(float Value)
@@ -163,10 +149,82 @@ void ATPSCharacter::InputAxisY(float Value)
 
 void ATPSCharacter::InputAttackPressed()
 {
+	AttackCharEvent(true);
 }
 
 void ATPSCharacter::InputAttackReleased()
 {
+	AttackCharEvent(false);
+}
+
+void ATPSCharacter::MovementTick(float DeltaTime)
+{
+	AddMovementInput(FVector(1.f, 0, 0), AxisX);
+	AddMovementInput(FVector(0, 1.f, 0), AxisY);
+	
+	if (MovementState == EMovementState::E_RunState)
+	{
+		FVector myRotationVector = FVector(AxisX,AxisY,0.0f);
+		FRotator myRotator = myRotationVector.ToOrientationRotator();
+		SetActorRotation((FQuat(myRotator)));
+	}
+	else
+	{
+		APlayerController* myController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (myController)
+		{
+			FHitResult ResultHit;
+			//myController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);// bug was here Config\DefaultEngine.Ini
+			myController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
+
+			float FindRotaterResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
+			SetActorRotation(FQuat(FRotator(0.0f, FindRotaterResultYaw, 0.0f)));
+
+			if (CurrentWeapon)
+			{
+				FVector Displacement = FVector(0);
+				switch (MovementState)
+				{
+				case EMovementState::E_AimState:
+					Displacement = FVector(0.0f, 0.0f, 160.0f);
+					CurrentWeapon->ShouldReduceDispersion = true;
+					break;
+				case EMovementState::E_AimCrouchState:
+					CurrentWeapon->ShouldReduceDispersion = true;
+					Displacement = FVector(0.0f, 0.0f, 160.0f);
+					break;
+				case EMovementState::E_CrouchState:
+					Displacement = FVector(0.0f, 0.0f, 120.0f);
+					CurrentWeapon->ShouldReduceDispersion = false;
+					break;
+				case EMovementState::E_WalkState:
+					Displacement = FVector(0.0f, 0.0f, 120.0f);
+					CurrentWeapon->ShouldReduceDispersion = false;
+					break;
+				case EMovementState::E_RunState:
+					break;
+				default:
+					break;
+				}
+				
+				CurrentWeapon->ShootEndLocation = ResultHit.Location + Displacement;
+				//aim cursor like 3d Widget?
+			}
+		}
+	}		
+}
+
+void ATPSCharacter::AttackCharEvent(bool bIsFiring)
+{
+	AWeaponDefault* myWeapon = nullptr;
+	myWeapon = GetCurrentWeapon();
+	if (myWeapon)
+	{
+		//ToDo Check melee or range
+		myWeapon->SetWeaponStateFire(bIsFiring);
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
 }
 
 void ATPSCharacter::CharacterUpdate()
@@ -221,12 +279,94 @@ void ATPSCharacter::ChangeMovementState()
 	}
 	
 	CharacterUpdate();
+
+	//Weapon state update
+	AWeaponDefault* myWeapon = GetCurrentWeapon();
+	if (myWeapon)
+	{
+		myWeapon->UpdateStateWeapon(MovementState);
+	}
 }
 
-void ATPSCharacter::InitWeapon()
+AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 {
+	return CurrentWeapon;
 }
 
-// AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
-// {
-// }
+void ATPSCharacter::InitWeapon(FName IdWeaponName)
+{
+	UWeaponGameInstance* myGI = Cast<UWeaponGameInstance>(GetGameInstance());
+	FWeaponInfo myWeaponInfo;
+	if (myGI)
+	{
+		if (myGI->GetWeaponInfoByName(IdWeaponName, myWeaponInfo))
+		{
+			if (myWeaponInfo.WeaponClass)
+			{
+				FVector SpawnLocation = FVector(0);
+				FRotator SpawnRotation = FRotator(0);
+
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				SpawnParams.Owner = GetOwner();
+				SpawnParams.Instigator = GetInstigator();
+
+				AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(myWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+				if (myWeapon)
+				{
+					FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+					myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+					CurrentWeapon = myWeapon;
+					
+					myWeapon->WeaponSetting = myWeaponInfo;
+					myWeapon->WeaponInfo.Round = myWeaponInfo.MaxRound;
+					//Remove !!! Debug
+					myWeapon->ReloadTime = myWeaponInfo.ReloadTime;
+					myWeapon->UpdateStateWeapon(MovementState);
+
+					myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
+					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::InitWeapon - Weapon not found in table -NULL"));
+		}
+	}
+}
+
+void ATPSCharacter::TryReloadWeapon()
+{
+	if (CurrentWeapon)
+	{
+		if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+			CurrentWeapon->InitReload();
+	}
+}
+
+void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
+{
+	WeaponReloadStart_BP(Anim);
+}
+
+void ATPSCharacter::WeaponReloadEnd()
+{
+	WeaponReloadEnd_BP();
+}
+
+void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
+{
+	// in BP
+}
+
+void ATPSCharacter::WeaponReloadEnd_BP_Implementation()
+{
+	// in BP
+}
+
+UDecalComponent* ATPSCharacter::GetCursorToWorld()
+{
+	return CurrentCursor;
+}
+
