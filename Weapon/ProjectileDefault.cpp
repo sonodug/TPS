@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "../Weapon/ProjectileDefault.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet/GameplayStatics.h"
@@ -70,20 +69,20 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 {
 	if (OtherActor && Hit.PhysMaterial.IsValid())
 	{
-		EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(Hit);
+		EPhysicalSurface SurfaceType = UGameplayStatics::GetSurfaceType(Hit);
 
-		if (ProjectileSetting.HitDecals.Contains(mySurfacetype))
+		if (ProjectileSetting.HitDecals.Contains(SurfaceType))
 		{
-			UMaterialInterface* myMaterial = ProjectileSetting.HitDecals[mySurfacetype];
+			UMaterialInterface* myMaterial = ProjectileSetting.HitDecals[SurfaceType];
 
 			if (myMaterial && OtherComp)
 			{
 				UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(),EAttachLocation::KeepWorldPosition,10.0f);
 			}
 		}
-		if (ProjectileSetting.HitFXs.Contains(mySurfacetype))
+		if (ProjectileSetting.HitFXs.Contains(SurfaceType))
 		{
-			UParticleSystem* myParticle = ProjectileSetting.HitFXs[mySurfacetype];
+			UParticleSystem* myParticle = ProjectileSetting.HitFXs[SurfaceType];
 			if (myParticle)
 			{
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));

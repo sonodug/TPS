@@ -319,7 +319,7 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 					CurrentWeapon = myWeapon;
 					
 					myWeapon->WeaponSetting = myWeaponInfo;
-					myWeapon->WeaponInfo.Round = myWeaponInfo.MaxRound;
+					myWeapon->WeaponInfo.MagazineCapacity = myWeaponInfo.MaxMagazineCapacity;
 					//Remove !!! Debug
 					myWeapon->ReloadTime = myWeaponInfo.ReloadTime;
 					myWeapon->UpdateStateWeapon(MovementState);
@@ -340,7 +340,7 @@ void ATPSCharacter::TryReloadWeapon()
 {
 	if (CurrentWeapon)
 	{
-		if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+		if (CurrentWeapon->GetWeaponMagazine() <= CurrentWeapon->WeaponSetting.MaxMagazineCapacity)
 			CurrentWeapon->InitReload();
 	}
 }

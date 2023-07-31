@@ -47,7 +47,7 @@ void AWeaponDefault::Tick(float DeltaTime)
 
 void AWeaponDefault::FireTick(float DeltaTime)
 {
-	if (GetWeaponRound() > 0)
+	if (GetWeaponMagazine() > 0)
 	{
 		if (WeaponFiring)
 			if (FireTimer < 0.f)
@@ -133,7 +133,7 @@ void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
 		WeaponFiring = bIsFire;
 	else
 		WeaponFiring = false;
-		FireTimer = 0.01f;//!!!!!
+		FireTimer = 0.01f;
 }
 
 bool AWeaponDefault::CheckWeaponCanFire()
@@ -149,7 +149,7 @@ FProjectileInfo AWeaponDefault::GetProjectile()
 void AWeaponDefault::Fire()
 {	
 	FireTimer = WeaponSetting.RateOfFire;
-	WeaponInfo.Round = WeaponInfo.Round - 1;
+	WeaponInfo.MagazineCapacity = WeaponInfo.MagazineCapacity - 1;
 	ChangeDispersionByShot();
 
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
@@ -169,12 +169,12 @@ void AWeaponDefault::Fire()
 		{
 			EndLocation = GetFireEndLocation(); 
 
-			FVector Dir = EndLocation - SpawnLocation;
+			FVector Direction = EndLocation - SpawnLocation;
 
-			Dir.Normalize();
+			Direction.Normalize();
 
-			FMatrix myMatrix(Dir, FVector(0, 1, 0), FVector(0, 0, 1), FVector::ZeroVector);
-			SpawnRotation = myMatrix.Rotator();
+			FMatrix RotationMatrix(Direction, FVector(0, 1, 0), FVector(0, 0, 1), FVector::ZeroVector);
+			SpawnRotation = RotationMatrix.Rotator();
 
 			if (ProjectileInfo.Projectile)
 			{
@@ -253,8 +253,7 @@ void AWeaponDefault::ChangeDispersionByShot()
 
 float AWeaponDefault::GetCurrentDispersion() const
 {
-	float Result = CurrentDispersion;
-	return Result;
+	return CurrentDispersion;
 }
 
 FVector AWeaponDefault::ApplyDispersionToShoot(FVector DirectionShoot) const
@@ -282,8 +281,7 @@ FVector AWeaponDefault::GetFireEndLocation() const
 		if (ShowDebug)
 			DrawDebugCone(GetWorld(), ShootLocation->GetComponentLocation(), ShootLocation->GetForwardVector(), WeaponSetting.DistacneTrace, GetCurrentDispersion()* PI / 180.f, GetCurrentDispersion()* PI / 180.f, 32, FColor::Emerald, false, .1f, (uint8)'\000', 1.0f);
 	}
-		
-
+	
 	if (ShowDebug)
 	{
 		//direction weapon look
@@ -295,8 +293,7 @@ FVector AWeaponDefault::GetFireEndLocation() const
 
 		//DrawDebugSphere(GetWorld(), ShootLocation->GetComponentLocation() + ShootLocation->GetForwardVector()*SizeVectorToChangeShootDirectionLogic, 10.f, 8, FColor::Red, false, 4.0f);
 	}
-		
-
+	
 	return EndLocation;
 }
 
@@ -305,9 +302,9 @@ int8 AWeaponDefault::GetNumberProjectileByShot() const
 	return WeaponSetting.NumberProjectileByShot;
 }
 
-int32 AWeaponDefault::GetWeaponRound()
+int32 AWeaponDefault::GetWeaponMagazine()
 {
-	return WeaponInfo.Round;
+	return WeaponInfo.MagazineCapacity;
 }
 
 void AWeaponDefault::InitReload()
@@ -324,7 +321,7 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
-	WeaponInfo.Round = WeaponSetting.MaxRound;
+	WeaponInfo.MagazineCapacity = WeaponSetting.MaxMagazineCapacity;
 
 	OnWeaponReloadEnd.Broadcast();
 }

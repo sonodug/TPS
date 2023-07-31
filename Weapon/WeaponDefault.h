@@ -10,7 +10,7 @@
 #include "WeaponDefault.generated.h"
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFireStart);//ToDo Delegate on event weapon fire - Anim char, state char...
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart,UAnimMontage*,Anim);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart, UAnimMontage*, Anim);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponReloadEnd);
 
 UCLASS()
@@ -19,20 +19,19 @@ class TPS_API AWeaponDefault : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	AWeaponDefault();
 
 	FOnWeaponReloadEnd OnWeaponReloadEnd;
 	FOnWeaponReloadStart OnWeaponReloadStart;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
-	class USceneComponent* SceneComponent = nullptr;
+	USceneComponent* SceneComponent = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
-	class USkeletalMeshComponent* SkeletalMeshWeapon = nullptr;
+	USkeletalMeshComponent* SkeletalMeshWeapon = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
-	class UStaticMeshComponent* StaticMeshWeapon = nullptr;
+	UStaticMeshComponent* StaticMeshWeapon = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
-	class UArrowComponent* ShootLocation = nullptr;
+	UArrowComponent* ShootLocation = nullptr;
 
 	UPROPERTY()
 	FWeaponInfo WeaponSetting;
@@ -70,9 +69,9 @@ public:
 	void UpdateStateWeapon(EMovementState NewMovementState);
 	void ChangeDispersionByShot();
 	float GetCurrentDispersion() const;
-	FVector ApplyDispersionToShoot(FVector DirectionShoot)const;
+	FVector ApplyDispersionToShoot(FVector DirectionShoot) const;
 
-	FVector GetFireEndLocation()const;
+	FVector GetFireEndLocation() const;
 	int8 GetNumberProjectileByShot() const;
 
 	//Timers
@@ -82,9 +81,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic Debug")	//Remove !!! Debug
 	float ReloadTime = 0.0f;
 	
-	//flags
+	//Flags
 	bool BlockFire = false;
-	//Dispersion
+	
+	//Dispersion params
 	bool ShouldReduceDispersion = false;
 	float CurrentDispersion = 0.0f;
 	float CurrentDispersionMax = 1.0f;
@@ -95,13 +95,13 @@ public:
 	FVector ShootEndLocation = FVector(0);
 
 	UFUNCTION(BlueprintCallable)
-	int32 GetWeaponRound();
+	int32 GetWeaponMagazine();
 	void InitReload();
 	void FinishReload();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
-		bool ShowDebug = false;
+	bool ShowDebug = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
-		float SizeVectorToChangeShootDirectionLogic = 100.0f;
+	float SizeVectorToChangeShootDirectionLogic = 100.0f;
 };

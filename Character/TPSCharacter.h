@@ -65,12 +65,13 @@ public:
 	//Weapon	
 	AWeaponDefault* CurrentWeapon = nullptr;
 
-	//for demo 
+	//Debug demo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
 	FName InitWeaponName;
 	
 	UDecalComponent* CurrentCursor = nullptr;
-	
+
+	//InputHandlers
 	UFUNCTION()
 	void InputAxisX(float Value);
 	UFUNCTION()
@@ -82,11 +83,11 @@ public:
 
 	float AxisX = 0.f;
 	float AxisY = 0.f;
-
+	
+	//Functions
 	UFUNCTION()
 	void MovementTick(float DeltaTime);
 	
-	//Func
 	UFUNCTION(BlueprintCallable)
 	void AttackCharEvent(bool bIsFiring);
 	UFUNCTION(BlueprintCallable)

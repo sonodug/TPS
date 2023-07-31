@@ -15,7 +15,6 @@ UCLASS()
 class TPS_API UWeaponGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
  
 public:
 	//table
