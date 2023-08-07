@@ -124,7 +124,7 @@ void AWeaponDefault::WeaponInit()
 		StaticMeshWeapon->DestroyComponent();
 	}
 
-	UpdateStateWeapon(EMovementState::E_WalkState);
+	UpdateStateWeapon(EMovementState::WalkState);
 }
 
 void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
@@ -149,7 +149,7 @@ FProjectileInfo AWeaponDefault::GetProjectile()
 void AWeaponDefault::Fire()
 {	
 	FireTimer = WeaponSetting.RateOfFire;
-	WeaponInfo.MagazineCapacity = WeaponInfo.MagazineCapacity - 1;
+	AdditionalWeaponInfo.MagazineCapacity = AdditionalWeaponInfo.MagazineCapacity - 1;
 	ChangeDispersionByShot();
 
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
@@ -208,35 +208,35 @@ void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
 
 	switch (NewMovementState)
 	{
-	case EMovementState::E_AimState:
+	case EMovementState::AimState:
 		
 		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimMax;
 		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimMin;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Aim_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
-	case EMovementState::E_AimCrouchState:
+	case EMovementState::AimCrouchState:
 		
 		CurrentDispersionMax = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimMax;
 		CurrentDispersionMin = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimMin;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.AimWalk_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
-	case EMovementState::E_CrouchState:
+	case EMovementState::CrouchState:
 		
 		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimMax;
 		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimMin;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Walk_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
-	case EMovementState::E_WalkState:
+	case EMovementState::WalkState:
 		
 		CurrentDispersionMax = WeaponSetting.DispersionWeapon.Run_StateDispersionAimMax;
 		CurrentDispersionMin = WeaponSetting.DispersionWeapon.Run_StateDispersionAimMin;
 		CurrentDispersionRecoil = WeaponSetting.DispersionWeapon.Run_StateDispersionAimRecoil;
 		CurrentDispersionReduction = WeaponSetting.DispersionWeapon.Aim_StateDispersionReduction;
 		break;
-	case EMovementState::E_RunState:
+	case EMovementState::RunState:
 		BlockFire = true;
 		SetWeaponStateFire(false);//set fire trigger to false
 		//Block Fire
@@ -304,7 +304,7 @@ int8 AWeaponDefault::GetNumberProjectileByShot() const
 
 int32 AWeaponDefault::GetWeaponMagazine()
 {
-	return WeaponInfo.MagazineCapacity;
+	return AdditionalWeaponInfo.MagazineCapacity;
 }
 
 void AWeaponDefault::InitReload()
@@ -312,7 +312,7 @@ void AWeaponDefault::InitReload()
 	WeaponReloading = true;
 
 	ReloadTimer = WeaponSetting.ReloadTime;
-
+	
 	//ToDo Anim reload
 	if(WeaponSetting.AnimCharReload)
 		OnWeaponReloadStart.Broadcast(WeaponSetting.AnimCharReload);
@@ -321,7 +321,17 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
-	WeaponInfo.MagazineCapacity = WeaponSetting.MaxMagazineCapacity;
+	AdditionalWeaponInfo.MagazineCapacity = WeaponSetting.MaxMagazineCapacity;
 
-	OnWeaponReloadEnd.Broadcast();
+	OnWeaponReloadEnd.Broadcast(true);
+}
+
+void AWeaponDefault::CancelReload()
+{
+	WeaponReloading = false;
+	if (SkeletalMeshWeapon && SkeletalMeshWeapon->GetAnimInstance())
+		SkeletalMeshWeapon->GetAnimInstance()->StopAllMontages(0.15f);
+
+	OnWeaponReloadEnd.Broadcast(false);
+	DropClip = false;
 }

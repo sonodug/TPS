@@ -48,6 +48,13 @@ ATPSCharacter::ATPSCharacter()
 	TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
+	if (InventoryComponent)
+	{
+		InventoryComponent->OnSwitchWeapon.AddDynamic(this, &ATPSCharacter::InitWeapon);
+	}
+
 	// Create a decal in the world to show the cursor's location
 	/*CursorToWorld = CreateDefaultSubobject<UDecalComponent>("CursorToWorld");
 	CursorToWorld->SetupAttachment(RootComponent);
@@ -97,12 +104,12 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 
 	if (CurrentCursor)
 	{
-		APlayerController* MyPlayerController = Cast<APlayerController>(GetController());
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
-		if (MyPlayerController)
+		if (PlayerController)
 		{
 			FHitResult TraceHitResult;
-			MyPlayerController->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
+			PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
 			FVector CursorFV = TraceHitResult.ImpactNormal;
 			FRotator CursorR = CursorFV.Rotation();
 
@@ -118,7 +125,7 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitWeapon(InitWeaponName);
+	InitWeapon(InitWeaponName, InitWeaponInfo);
 
 	if (CursorMaterial)
 	{
@@ -132,9 +139,13 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	InputComponent->BindAxis("MoveForward", this, &ATPSCharacter::InputAxisX);
 	InputComponent->BindAxis("MoveRight", this, &ATPSCharacter::InputAxisY);
+	
 	InputComponent->BindAction(TEXT("FireEvent"), IE_Pressed, this, &ATPSCharacter::InputAttackPressed);
 	InputComponent->BindAction(TEXT("FireEvent"), IE_Released, this, &ATPSCharacter::InputAttackReleased);
 	InputComponent->BindAction(TEXT("ReloadEvent"), IE_Released, this, &ATPSCharacter::TryReloadWeapon);
+	
+	InputComponent->BindAction(TEXT("SwitchToNextWeapon"), IE_Pressed, this, &ATPSCharacter::TrySwitchToNextWeapon);
+	InputComponent->BindAction(TEXT("SwitchToPreviousWeapon"), IE_Pressed, this, &ATPSCharacter::TrySwitchToPreviousWeapon);
 }
 
 void ATPSCharacter::InputAxisX(float Value)
@@ -162,20 +173,20 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 	AddMovementInput(FVector(1.f, 0, 0), AxisX);
 	AddMovementInput(FVector(0, 1.f, 0), AxisY);
 	
-	if (MovementState == EMovementState::E_RunState)
+	if (MovementState == EMovementState::RunState)
 	{
-		FVector myRotationVector = FVector(AxisX,AxisY,0.0f);
-		FRotator myRotator = myRotationVector.ToOrientationRotator();
-		SetActorRotation((FQuat(myRotator)));
+		FVector RotationVector = FVector(AxisX,AxisY,0.0f);
+		FRotator Rotator = RotationVector.ToOrientationRotator();
+		SetActorRotation((FQuat(Rotator)));
 	}
 	else
 	{
-		APlayerController* myController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		if (myController)
+		APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (MyController)
 		{
 			FHitResult ResultHit;
 			//myController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);// bug was here Config\DefaultEngine.Ini
-			myController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
+			MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
 
 			float FindRotaterResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
 			SetActorRotation(FQuat(FRotator(0.0f, FindRotaterResultYaw, 0.0f)));
@@ -185,23 +196,23 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 				FVector Displacement = FVector(0);
 				switch (MovementState)
 				{
-				case EMovementState::E_AimState:
+				case EMovementState::AimState:
 					Displacement = FVector(0.0f, 0.0f, 160.0f);
 					CurrentWeapon->ShouldReduceDispersion = true;
 					break;
-				case EMovementState::E_AimCrouchState:
+				case EMovementState::AimCrouchState:
 					CurrentWeapon->ShouldReduceDispersion = true;
 					Displacement = FVector(0.0f, 0.0f, 160.0f);
 					break;
-				case EMovementState::E_CrouchState:
+				case EMovementState::CrouchState:
 					Displacement = FVector(0.0f, 0.0f, 120.0f);
 					CurrentWeapon->ShouldReduceDispersion = false;
 					break;
-				case EMovementState::E_WalkState:
+				case EMovementState::WalkState:
 					Displacement = FVector(0.0f, 0.0f, 120.0f);
 					CurrentWeapon->ShouldReduceDispersion = false;
 					break;
-				case EMovementState::E_RunState:
+				case EMovementState::RunState:
 					break;
 				default:
 					break;
@@ -216,12 +227,12 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 
 void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 {
-	AWeaponDefault* myWeapon = nullptr;
-	myWeapon = GetCurrentWeapon();
-	if (myWeapon)
+	AWeaponDefault* Weapon = nullptr;
+	Weapon = GetCurrentWeapon();
+	if (Weapon)
 	{
 		//ToDo Check melee or range
-		myWeapon->SetWeaponStateFire(bIsFiring);
+		Weapon->SetWeaponStateFire(bIsFiring);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
@@ -233,19 +244,19 @@ void ATPSCharacter::CharacterUpdate()
 	
 	switch (MovementState)
 	{
-		case EMovementState::E_WalkState:
+		case EMovementState::WalkState:
 			ResultSpeed = SpeedInfo.WalkSpeed;
 			break;
-		case EMovementState::E_AimCrouchState:
+		case EMovementState::AimCrouchState:
 			ResultSpeed = SpeedInfo.AimCrouchSpeed;
 			break;
-		case EMovementState::E_AimState:
+		case EMovementState::AimState:
 			ResultSpeed = SpeedInfo.AimNormalSpeed;
 			break;
-		case EMovementState::E_CrouchState:
+		case EMovementState::CrouchState:
 			ResultSpeed = SpeedInfo.CrouchSpeed;
 			break;
-		case EMovementState::E_RunState:
+		case EMovementState::RunState:
 			ResultSpeed = SpeedInfo.RunSpeed;
 			break;
 		default:
@@ -258,33 +269,33 @@ void ATPSCharacter::CharacterUpdate()
 void ATPSCharacter::ChangeMovementState()
 {
 	if (!CrouchEnabled && !RunEnabled && !AimEnabled)
-		MovementState = EMovementState::E_WalkState;
+		MovementState = EMovementState::WalkState;
 	else if (RunEnabled)
 	{
 		CrouchEnabled = false;
 		AimEnabled = false;
-		MovementState = EMovementState::E_RunState;
+		MovementState = EMovementState::RunState;
 	}
 	else if (CrouchEnabled && !RunEnabled && AimEnabled)
 	{
-		MovementState = EMovementState::E_AimCrouchState;
+		MovementState = EMovementState::AimCrouchState;
 	}
 	else if (CrouchEnabled && !RunEnabled && !AimEnabled)
 	{
-		MovementState = EMovementState::E_CrouchState;
+		MovementState = EMovementState::CrouchState;
 	}
 	else if (!CrouchEnabled && !RunEnabled && AimEnabled)
 	{
-		MovementState = EMovementState::E_AimState;
+		MovementState = EMovementState::AimState;
 	}
 	
 	CharacterUpdate();
 
 	//Weapon state update
-	AWeaponDefault* myWeapon = GetCurrentWeapon();
-	if (myWeapon)
+	AWeaponDefault* MyCurrentWeapon = GetCurrentWeapon();
+	if (MyCurrentWeapon)
 	{
-		myWeapon->UpdateStateWeapon(MovementState);
+		MyCurrentWeapon->UpdateStateWeapon(MovementState);
 	}
 }
 
@@ -293,15 +304,21 @@ AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 	return CurrentWeapon;
 }
 
-void ATPSCharacter::InitWeapon(FName IdWeaponName)
+void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo)
 {
-	UWeaponGameInstance* myGI = Cast<UWeaponGameInstance>(GetGameInstance());
-	FWeaponInfo myWeaponInfo;
-	if (myGI)
+	if (CurrentWeapon)
 	{
-		if (myGI->GetWeaponInfoByName(IdWeaponName, myWeaponInfo))
+		CurrentWeapon->Destroy();
+		CurrentWeapon = nullptr;
+	}
+	
+	UWeaponGameInstance* GameInstance = Cast<UWeaponGameInstance>(GetGameInstance());
+	FWeaponInfo WeaponInfo;
+	if (GameInstance)
+	{
+		if (GameInstance->GetWeaponInfoByName(IdWeaponName, WeaponInfo))
 		{
-			if (myWeaponInfo.WeaponClass)
+			if (WeaponInfo.WeaponClass)
 			{
 				FVector SpawnLocation = FVector(0);
 				FRotator SpawnRotation = FRotator(0);
@@ -311,21 +328,27 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 				SpawnParams.Owner = GetOwner();
 				SpawnParams.Instigator = GetInstigator();
 
-				AWeaponDefault* myWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(myWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
-				if (myWeapon)
+				AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(WeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+				if (MyWeapon)
 				{
 					FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-					myWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
-					CurrentWeapon = myWeapon;
+					MyWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+					CurrentWeapon = MyWeapon;
 					
-					myWeapon->WeaponSetting = myWeaponInfo;
-					myWeapon->WeaponInfo.MagazineCapacity = myWeaponInfo.MaxMagazineCapacity;
+					MyWeapon->WeaponSetting = WeaponInfo;
+					MyWeapon->AdditionalWeaponInfo.MagazineCapacity = WeaponInfo.MaxMagazineCapacity;
 					//Remove !!! Debug
-					myWeapon->ReloadTime = myWeaponInfo.ReloadTime;
-					myWeapon->UpdateStateWeapon(MovementState);
+					MyWeapon->ReloadTime = WeaponInfo.ReloadTime;
+					MyWeapon->UpdateStateWeapon(MovementState);
 
-					myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
-					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
+					MyWeapon->AdditionalWeaponInfo = WeaponAdditionalInfo;
+					if (InventoryComponent)
+						CurrentIndexWeapon = InventoryComponent->GetWeaponSlotIndexByName(IdWeaponName);
+					
+					MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
+					MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
+					
+					MyWeapon->OnWeaponFireStart.AddDynamic(this, &ATPSCharacter::WeaponFireStart);
 				}
 			}
 		}
@@ -336,9 +359,55 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 	}
 }
 
+void ATPSCharacter::TrySwitchToNextWeapon()
+{
+	if (InventoryComponent->WeaponSlots.Num() > 1)
+	{
+		int8 OldIndex = CurrentIndexWeapon;
+		FAdditionalWeaponInfo OldAdditionalInfo;
+		if (CurrentWeapon)
+		{
+			OldAdditionalInfo = CurrentWeapon->AdditionalWeaponInfo;
+			if (CurrentWeapon->WeaponReloading)
+				CurrentWeapon->CancelReload();
+		}
+
+		if (InventoryComponent)
+		{
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon + 1, OldIndex, OldAdditionalInfo))
+			{
+				
+			}
+		}
+	}
+}
+
+void ATPSCharacter::TrySwitchToPreviousWeapon()
+{
+	if (InventoryComponent->WeaponSlots.Num() > 1)
+	{
+		int8 OldIndex = CurrentIndexWeapon;
+		FAdditionalWeaponInfo OldAdditionalInfo;
+		if (CurrentWeapon)
+		{
+			OldAdditionalInfo = CurrentWeapon->AdditionalWeaponInfo;
+			if (CurrentWeapon->WeaponReloading)
+				CurrentWeapon->CancelReload();
+		}
+
+		if (InventoryComponent)
+		{
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon - 1, OldIndex, OldAdditionalInfo))
+			{
+				
+			}
+		}
+	}
+}
+
 void ATPSCharacter::TryReloadWeapon()
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
 		if (CurrentWeapon->GetWeaponMagazine() <= CurrentWeapon->WeaponSetting.MaxMagazineCapacity)
 			CurrentWeapon->InitReload();
@@ -350,9 +419,14 @@ void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
 	WeaponReloadStart_BP(Anim);
 }
 
-void ATPSCharacter::WeaponReloadEnd()
+void ATPSCharacter::WeaponReloadEnd(bool bIsSucces)
 {
-	WeaponReloadEnd_BP();
+	WeaponReloadEnd_BP(bIsSucces);
+}
+
+void ATPSCharacter::WeaponFireStart(UAnimMontage* Anim)
+{
+	WeaponFireStart_BP(Anim);
 }
 
 void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
@@ -360,9 +434,13 @@ void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
 	// in BP
 }
 
-void ATPSCharacter::WeaponReloadEnd_BP_Implementation()
+void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSucces)
 {
 	// in BP
+}
+
+void ATPSCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* Anim)
+{
 }
 
 UDecalComponent* ATPSCharacter::GetCursorToWorld()

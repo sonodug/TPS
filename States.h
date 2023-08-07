@@ -9,11 +9,21 @@
 UENUM(BlueprintType)
 enum class EMovementState : uint8
 {
-	E_AimState UMETA(DisplayName = "Aim State"),
-	E_AimCrouchState UMETA(DisplayName = "AimCrouch State"),
-	E_CrouchState UMETA(DisplayName = "Crouch State"),
-	E_WalkState UMETA(DisplayName = "Walk State"),
-	E_RunState UMETA(DisplayName = "Run State"),
+	AimState UMETA(DisplayName = "Aim State"),
+	AimCrouchState UMETA(DisplayName = "AimCrouch State"),
+	CrouchState UMETA(DisplayName = "Crouch State"),
+	WalkState UMETA(DisplayName = "Walk State"),
+	RunState UMETA(DisplayName = "Run State")
+};
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	RifleType UMETA(DisplayName = "Rifle"),
+	ShotgunType UMETA(DisplayName = "Shotgun"),
+	SniperType UMETA(DisplayName = "Sniper"),
+	GrenadeLauncher UMETA(DisplayName = "GrenadeLauncher"),
+	RocketLauncher UMETA(DisplayName = "RocketLauncher")
 };
 
 USTRUCT(BlueprintType)
@@ -160,12 +170,38 @@ struct FWeaponInfo : public FTableRowBase
 };
 
 USTRUCT(BlueprintType)
-struct FAddicionalWeaponInfo
+struct FAdditionalWeaponInfo
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
 	int32 MagazineCapacity = 10;
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Slot")
+	int32 SlotIndex;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Slot")
+	FName ItemName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Slot")
+	FAdditionalWeaponInfo AdditionalWeaponInfo;
+};
+
+USTRUCT(BlueprintType)
+struct FAmmoSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Slot")
+	EWeaponType WeaponType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Slot")
+	int32 Count;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo Slot")
+	int32 MaxCount;
 };
 
 UCLASS()

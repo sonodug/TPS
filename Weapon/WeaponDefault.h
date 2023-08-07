@@ -10,8 +10,9 @@
 #include "WeaponDefault.generated.h"
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFireStart);//ToDo Delegate on event weapon fire - Anim char, state char...
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart, UAnimMontage*, Anim);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponReloadEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart, UAnimMontage*, AnimReload);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadEnd, bool, bIsSucces);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFireStart, UAnimMontage*, AnimFire);
 
 UCLASS()
 class TPS_API AWeaponDefault : public AActor
@@ -23,6 +24,7 @@ public:
 
 	FOnWeaponReloadEnd OnWeaponReloadEnd;
 	FOnWeaponReloadStart OnWeaponReloadStart;
+	FOnWeaponFireStart OnWeaponFireStart;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	USceneComponent* SceneComponent = nullptr;
@@ -36,7 +38,7 @@ public:
 	UPROPERTY()
 	FWeaponInfo WeaponSetting;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
-	FAddicionalWeaponInfo WeaponInfo;
+	FAdditionalWeaponInfo AdditionalWeaponInfo;
 
 protected:
 	// Called when the game starts or when spawned
@@ -83,6 +85,7 @@ public:
 	
 	//Flags
 	bool BlockFire = false;
+	bool DropClip = false;
 	
 	//Dispersion params
 	bool ShouldReduceDispersion = false;
@@ -98,6 +101,7 @@ public:
 	int32 GetWeaponMagazine();
 	void InitReload();
 	void FinishReload();
+	void CancelReload();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool ShowDebug = false;
