@@ -236,9 +236,56 @@ void AWeaponDefault::Fire()
 			}
 			else
 			{
-				//ToDo Projectile null Init trace fire			
-				
-				//GetWorld()->LineTraceSingleByChannel()
+				FHitResult HitResult;
+				FCollisionQueryParams CollisionParams;
+				CollisionParams.AddIgnoredActor(this);
+
+				bool bHit = GetWorld()->LineTraceSingleByChannel(
+					HitResult,
+					SpawnLocation,
+					EndLocation,
+					ECC_Visibility, //change
+					CollisionParams
+				);
+
+				if (bHit)
+				{
+					AActor* HitActor = HitResult.GetActor();
+					if (HitActor)
+					{
+						UGameplayStatics::ApplyDamage(HitActor, 10.f, GetInstigatorController(), this, NULL);
+					}
+					
+					DrawDebugLine(
+						GetWorld(),
+						SpawnLocation,
+						EndLocation,
+						FColor::Green,
+						false, 1, 0,
+						2.0f
+					);
+					
+					DrawDebugPoint(
+						GetWorld(),
+						HitResult.ImpactPoint,
+						10.0f,
+						FColor::Blue,
+						false,
+						1,
+						0
+					);			
+				}
+				else
+				{
+					DrawDebugLine(
+						GetWorld(),
+						SpawnLocation,
+						EndLocation,
+						FColor::Red,
+						true, 1, 0,
+						5.0f
+					);
+				}
 			}
 		}				
 	}
