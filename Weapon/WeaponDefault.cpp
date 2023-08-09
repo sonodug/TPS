@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "../Weapon/WeaponDefault.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -25,6 +26,12 @@ AWeaponDefault::AWeaponDefault()
 
 	ShootLocation = CreateDefaultSubobject<UArrowComponent>(TEXT("ShootLocation"));
 	ShootLocation->SetupAttachment(RootComponent);
+	
+	ShellDropLocation = CreateDefaultSubobject<UArrowComponent>(TEXT("ShellDropLocation"));
+	ShellDropLocation->SetupAttachment(RootComponent);
+	
+	MagazineDropPoint = CreateDefaultSubobject<USceneComponent>(TEXT("MagazineDropPoint"));
+	MagazineDropPoint->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -147,16 +154,20 @@ FProjectileInfo AWeaponDefault::GetProjectile()
 }
 
 void AWeaponDefault::Fire()
-{	
+{
 	FireTimer = WeaponSetting.RateOfFire;
 	AdditionalWeaponInfo.MagazineCapacity = AdditionalWeaponInfo.MagazineCapacity - 1;
 	ChangeDispersionByShot();
-
+	
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
-
+	
+	//This is fragment shouldn't be here
+	if(WeaponSetting.AnimFireHip && WeaponSetting.AnimFireIronsight)
+		OnWeaponFireStart.Broadcast(WeaponSetting.AnimFireHip, WeaponSetting.AnimFireIronsight);
+	
 	int8 NumberProjectile = GetNumberProjectileByShot();
-
+	
 	if (ShootLocation)
 	{
 		FVector SpawnLocation = ShootLocation->GetComponentLocation();
@@ -188,7 +199,39 @@ void AWeaponDefault::Fire()
 				AProjectileDefault* myProjectile = Cast<AProjectileDefault>(GetWorld()->SpawnActor(ProjectileInfo.Projectile, &SpawnLocation, &SpawnRotation, SpawnParams));
 				if (myProjectile)
 				{													
-					myProjectile->InitProjectile(WeaponSetting.ProjectileSetting);				
+					myProjectile->InitProjectile(WeaponSetting.ProjectileSetting);
+
+					AActor* SpawnedShellBullets = GetWorld()->SpawnActor<AActor>(
+						WeaponSetting.DroppedShellBullets,
+						ShellDropLocation->GetComponentLocation(),
+						ShellDropLocation->GetComponentRotation(),
+						SpawnParams);
+
+					if (SpawnedShellBullets)
+					{
+						if (ShellDropLocation)
+						{
+							FVector ImpulseDirection = ShellDropLocation->GetForwardVector();
+							float TestImpulseStrength = WeaponSetting.ImpulseStrength;
+
+							// process exception (actor root may not has UMeshComponent)
+							Cast<UMeshComponent>(SpawnedShellBullets->GetRootComponent())->AddImpulse(ImpulseDirection * TestImpulseStrength);
+							
+							FTimerHandle TimerHandle;
+							GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this, SpawnedShellBullets]()
+							{
+								if (SpawnedShellBullets)
+								{
+									SpawnedShellBullets->Destroy();
+								}
+							}, WeaponSetting.ShellBulletsDestroyTime, false);
+						}
+						else
+						{
+							UE_LOG(LogTemp, Error, TEXT("ShellDropLocation is not set! Cannot apply impulse."));
+							SpawnedShellBullets->Destroy();
+						}
+					}
 				}
 			}
 			else
@@ -314,8 +357,36 @@ void AWeaponDefault::InitReload()
 	ReloadTimer = WeaponSetting.ReloadTime;
 	
 	//ToDo Anim reload
-	if(WeaponSetting.AnimCharReload)
-		OnWeaponReloadStart.Broadcast(WeaponSetting.AnimCharReload);
+	if(WeaponSetting.AnimReloadHip && WeaponSetting.AnimReloadIronsight)
+		OnWeaponReloadStart.Broadcast(WeaponSetting.AnimReloadHip, WeaponSetting.AnimReloadIronsight);
+	
+	if (WeaponSetting.DroppedMagazine)
+	{
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Owner = GetOwner();
+		SpawnParams.Instigator = GetInstigator();
+		
+		AActor* SpawnedMagazine = GetWorld()->SpawnActor<AActor>(
+			 WeaponSetting.DroppedMagazine,
+			 MagazineDropPoint->GetComponentLocation(),
+			 MagazineDropPoint->GetComponentRotation(),
+			 SpawnParams);
+		
+		if (SpawnedMagazine)
+		{
+			//Actor Lifetime timer
+			FTimerHandle TimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this, SpawnedMagazine]()
+			{
+				if (SpawnedMagazine)
+				{
+					SpawnedMagazine->Destroy();
+				}
+			}, WeaponSetting.MagazineDestroyTime, false);
+		}
+	}
 }
 
 void AWeaponDefault::FinishReload()

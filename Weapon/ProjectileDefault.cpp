@@ -70,14 +70,14 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 	if (OtherActor && Hit.PhysMaterial.IsValid())
 	{
 		EPhysicalSurface SurfaceType = UGameplayStatics::GetSurfaceType(Hit);
-
+		
 		if (ProjectileSetting.HitDecals.Contains(SurfaceType))
 		{
-			UMaterialInterface* myMaterial = ProjectileSetting.HitDecals[SurfaceType];
+			UMaterialInterface* MyMaterial = ProjectileSetting.HitDecals[SurfaceType];
 
-			if (myMaterial && OtherComp)
+			if (MyMaterial && OtherComp)
 			{
-				UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(),EAttachLocation::KeepWorldPosition,10.0f);
+				//UGameplayStatics::SpawnDecalAttached(MyMaterial, FVector(20.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(),EAttachLocation::KeepWorldPosition,10.0f);
 			}
 		}
 		if (ProjectileSetting.HitFXs.Contains(SurfaceType))

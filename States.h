@@ -84,31 +84,31 @@ struct FWeaponDispersion
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Aim_StateDispersionAimMax = 2.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Aim_StateDispersionAimMin = 0.3f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Aim_StateDispersionAimRecoil = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Aim_StateDispersionReduction = .3f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float AimWalk_StateDispersionAimMax = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float AimWalk_StateDispersionAimMin = 0.1f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float AimWalk_StateDispersionAimRecoil = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float AimWalk_StateDispersionReduction = 0.4f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Walk_StateDispersionAimMax = 5.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Walk_StateDispersionAimMin = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Walk_StateDispersionAimRecoil = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	float Walk_StateDispersionReduction = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
@@ -138,35 +138,45 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	int32 NumberProjectileByShot = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dispersion")
 	FWeaponDispersion DispersionWeapon;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* SoundFireWeapon = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* SoundReloadWeapon = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
 	UParticleSystem* EffectFireWeapon = nullptr;
 	//if null use trace logic (TSubclassOf<class AProjectileDefault> Projectile = nullptr)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	FProjectileInfo ProjectileSetting;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	float WeaponDamage = 20.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
 	float DistacneTrace = 2000.0f;
 	//one decal on all?
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect ")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
 	UDecalComponent* DecalOnHit = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim ")
-	UAnimMontage* AnimCharFire = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim ")
-	UAnimMontage* AnimCharReload = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim")
+	UAnimMontage* AnimFireHip = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim")
+	UAnimMontage* AnimFireIronsight = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim")
+	UAnimMontage* AnimReloadHip = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim")
+	UAnimMontage* AnimReloadIronsight = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
-	UStaticMesh* MagazineDrop = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
-	UStaticMesh* ShellBullets = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor")
+	TSubclassOf<AActor> DroppedMagazine = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor")
+	float MagazineDestroyTime = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor")
+	TSubclassOf<AActor> DroppedShellBullets = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor")
+	float ShellBulletsDestroyTime = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor")
+	float ImpulseStrength = 10.0f;
 };
 
 USTRUCT(BlueprintType)

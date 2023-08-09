@@ -75,6 +75,8 @@ public:
 	FName InitWeaponName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
 	FAdditionalWeaponInfo InitWeaponInfo;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Demo")
+	FName CurrentWeaponName;
 	
 	UDecalComponent* CurrentCursor = nullptr;
  
@@ -105,7 +107,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AWeaponDefault* GetCurrentWeapon();
 	UFUNCTION(BlueprintCallable)
-	void InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo);
+	void InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo);
 	UFUNCTION(BlueprintCallable)
 	void TryReloadWeapon();
 	UFUNCTION()
@@ -113,17 +115,17 @@ public:
 	UFUNCTION()
 	void TrySwitchToPreviousWeapon();
 	UFUNCTION()
-	void WeaponReloadStart(UAnimMontage* Anim);
+	void WeaponReloadStart(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight);
 	UFUNCTION()
-	void WeaponReloadEnd(bool bIsSucces);
+	void WeaponReloadEnd(bool bIsSuccess);
 	UFUNCTION()
-	void WeaponFireStart(UAnimMontage* Anim);
+	void WeaponFireStart(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight);
 	UFUNCTION(BlueprintNativeEvent)
-	void WeaponReloadStart_BP(UAnimMontage* Anim);
+	void WeaponReloadStart_BP(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight);
 	UFUNCTION(BlueprintNativeEvent)
 	void WeaponReloadEnd_BP(bool bIsSucces);
 	UFUNCTION(BlueprintNativeEvent)
-	void WeaponFireStart_BP(UAnimMontage* Anim);
+	void WeaponFireStart_BP(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight);
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();

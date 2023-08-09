@@ -126,6 +126,7 @@ void ATPSCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	InitWeapon(InitWeaponName, InitWeaponInfo);
+	CurrentWeaponName = InitWeaponName;
 
 	if (CursorMaterial)
 	{
@@ -304,7 +305,7 @@ AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 	return CurrentWeapon;
 }
 
-void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo)
+void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo)
 {
 	if (CurrentWeapon)
 	{
@@ -316,8 +317,10 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponA
 	FWeaponInfo WeaponInfo;
 	if (GameInstance)
 	{
-		if (GameInstance->GetWeaponInfoByName(IdWeaponName, WeaponInfo))
+		if (GameInstance->GetWeaponInfoByName(WeaponName, WeaponInfo))
 		{
+			CurrentWeaponName = WeaponName;
+			
 			if (WeaponInfo.WeaponClass)
 			{
 				FVector SpawnLocation = FVector(0);
@@ -343,7 +346,7 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponA
 
 					MyWeapon->AdditionalWeaponInfo = WeaponAdditionalInfo;
 					if (InventoryComponent)
-						CurrentIndexWeapon = InventoryComponent->GetWeaponSlotIndexByName(IdWeaponName);
+						CurrentIndexWeapon = InventoryComponent->GetWeaponSlotIndexByName(WeaponName);
 					
 					MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
 					MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
@@ -409,27 +412,27 @@ void ATPSCharacter::TryReloadWeapon()
 {
 	if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
-		if (CurrentWeapon->GetWeaponMagazine() <= CurrentWeapon->WeaponSetting.MaxMagazineCapacity)
+		if (CurrentWeapon->GetWeaponMagazine() < CurrentWeapon->WeaponSetting.MaxMagazineCapacity)
 			CurrentWeapon->InitReload();
 	}
 }
 
-void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
+void ATPSCharacter::WeaponReloadStart(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight)
 {
-	WeaponReloadStart_BP(Anim);
+	WeaponReloadStart_BP(AnimReloadHip, AnimReloadIronsight);
 }
 
-void ATPSCharacter::WeaponReloadEnd(bool bIsSucces)
+void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess)
 {
-	WeaponReloadEnd_BP(bIsSucces);
+	WeaponReloadEnd_BP(bIsSuccess);
 }
 
-void ATPSCharacter::WeaponFireStart(UAnimMontage* Anim)
+void ATPSCharacter::WeaponFireStart(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight)
 {
-	WeaponFireStart_BP(Anim);
+	WeaponFireStart_BP(AnimFireHip, AnimFireIronsight);
 }
 
-void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
+void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight)
 {
 	// in BP
 }
@@ -439,7 +442,7 @@ void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSucces)
 	// in BP
 }
 
-void ATPSCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* Anim)
+void ATPSCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight)
 {
 }
 
