@@ -8,6 +8,7 @@
 #include "InventoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSwitchWeapon, FName, WeaponIdName, FAdditionalWeaponInfo, WeaponAdditionalInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, EWeaponType, AmmoType, int32, Count);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_API UInventoryComponent : public UActorComponent
@@ -18,6 +19,8 @@ public:
 	// Sets default values for this component's properties
 	UInventoryComponent();
 	FOnSwitchWeapon OnSwitchWeapon;
+	UPROPERTY(BlueprintAssignable, Category="Inventory")
+	FOnAmmoChanged OnAmmoChanged;
 
 protected:
 	// Called when the game starts
@@ -38,4 +41,7 @@ public:
 	FAdditionalWeaponInfo GetAdditionalWeaponInfo(int32 WeaponIndex);
 	int32 GetWeaponSlotIndexByName(FName IdWeaponName);
 	void SetAdditionalWeaponInfo(int32 WeaponIndex, FAdditionalWeaponInfo NewInfo);
+
+	// govno -> rename
+	void WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToTake);
 };

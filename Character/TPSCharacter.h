@@ -117,13 +117,13 @@ public:
 	UFUNCTION()
 	void WeaponReloadStart(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight);
 	UFUNCTION()
-	void WeaponReloadEnd(bool bIsSuccess);
+	void WeaponReloadEnd(bool bIsSuccess, int32 AmmoLeft);
 	UFUNCTION()
 	void WeaponFireStart(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight);
 	UFUNCTION(BlueprintNativeEvent)
 	void WeaponReloadStart_BP(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight);
 	UFUNCTION(BlueprintNativeEvent)
-	void WeaponReloadEnd_BP(bool bIsSucces);
+	void WeaponReloadEnd_BP(bool bIsSucces, int32 AmmoLeft);
 	UFUNCTION(BlueprintNativeEvent)
 	void WeaponFireStart_BP(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight);
 

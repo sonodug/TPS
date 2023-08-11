@@ -400,10 +400,12 @@ int32 AWeaponDefault::GetWeaponMagazine()
 void AWeaponDefault::InitReload()
 {
 	WeaponReloading = true;
-
-	ReloadTimer = WeaponSetting.ReloadTime;
 	
-	//ToDo Anim reload
+	ReloadTimer = WeaponSetting.ReloadTime;
+
+	// ToDo add sound reload location 
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundReloadWeapon, ShootLocation->GetComponentLocation());
+	
 	if(WeaponSetting.AnimReloadHip && WeaponSetting.AnimReloadIronsight)
 		OnWeaponReloadStart.Broadcast(WeaponSetting.AnimReloadHip, WeaponSetting.AnimReloadIronsight);
 	
@@ -439,9 +441,10 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
+	int32 AmmoToTake = WeaponSetting.MaxMagazineCapacity - AdditionalWeaponInfo.MagazineCapacity;
 	AdditionalWeaponInfo.MagazineCapacity = WeaponSetting.MaxMagazineCapacity;
-
-	OnWeaponReloadEnd.Broadcast(true);
+	
+	OnWeaponReloadEnd.Broadcast(true, AmmoToTake);
 }
 
 void AWeaponDefault::CancelReload()
@@ -450,6 +453,6 @@ void AWeaponDefault::CancelReload()
 	if (SkeletalMeshWeapon && SkeletalMeshWeapon->GetAnimInstance())
 		SkeletalMeshWeapon->GetAnimInstance()->StopAllMontages(0.15f);
 
-	OnWeaponReloadEnd.Broadcast(false);
+	OnWeaponReloadEnd.Broadcast(false, 0);
 	DropClip = false;
 }

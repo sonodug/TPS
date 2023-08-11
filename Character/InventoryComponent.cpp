@@ -41,6 +41,8 @@ void UInventoryComponent::BeginPlay()
 		}
 	}
 
+	MaxWeaponSlots = WeaponSlots.Num();
+
 	if (WeaponSlots.IsValidIndex(0))
 	{
 		if (!WeaponSlots[0].ItemName.IsNone())
@@ -76,7 +78,7 @@ bool UInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldInde
 	int8 i = 0;
 	while (i < WeaponSlots.Num() && !bIsSuccess)
 	{
-		if (WeaponSlots[i].SlotIndex == CorrectIndex)
+		if (i == CorrectIndex)
 		{
 			if (!WeaponSlots[i].ItemName.IsNone())
 			{
@@ -111,7 +113,7 @@ FAdditionalWeaponInfo UInventoryComponent::GetAdditionalWeaponInfo(int32 WeaponI
 		int8 i = 0;
 		while (i < WeaponSlots.Num() && !bIsFind)
 		{
-			if (WeaponSlots[i].SlotIndex == WeaponIndex)
+			if (i == WeaponIndex)
 			{
 				Result = WeaponSlots[i].AdditionalWeaponInfo;
 				bIsFind = true;
@@ -137,7 +139,7 @@ int32 UInventoryComponent::GetWeaponSlotIndexByName(FName IdWeaponName)
 		if (WeaponSlots[i].ItemName == IdWeaponName)
 		{
 			bIsFind = false;
-			Result = WeaponSlots[i].SlotIndex;
+			Result = i;
 		}
 		i++;
 	}
@@ -152,7 +154,7 @@ void UInventoryComponent::SetAdditionalWeaponInfo(int32 WeaponIndex, FAdditional
 		int8 i = 0;
 		while (i < WeaponSlots.Num() && !bIsFind)
 		{
-			if (WeaponSlots[i].SlotIndex == WeaponIndex)
+			if (i == WeaponIndex)
 			{
 				WeaponSlots[i].AdditionalWeaponInfo = NewInfo;
 				bIsFind = true;
@@ -164,5 +166,24 @@ void UInventoryComponent::SetAdditionalWeaponInfo(int32 WeaponIndex, FAdditional
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::SetAdditionalWeaponInfo - Not Correct weapon index - %d"), WeaponIndex);
+}
+
+void UInventoryComponent::WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToTake)
+{
+	bool bIsFind = false;
+	int8 i = 0;
+	while (i < AmmoSlots.Num() && !bIsFind)
+	{
+		if (AmmoSlots[i].WeaponType == WeaponType)
+		{
+			AmmoSlots[i].Count -= AmmoToTake;
+			if (AmmoSlots[i].Count > AmmoSlots[i].MaxCount || AmmoSlots[i].Count < 0)
+				AmmoSlots[i].Count = AmmoSlots[i].MaxCount;
+
+			OnAmmoChanged.Broadcast(AmmoSlots[i].WeaponType, AmmoSlots[i].Count);
+			bIsFind = true;
+		}
+		i++;
+	}
 }
 

@@ -177,6 +177,11 @@ struct FWeaponInfo : public FTableRowBase
 	float ShellBulletsDestroyTime = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor")
 	float ImpulseStrength = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UTexture2D* WeaponIcon = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	EWeaponType WeaponType = EWeaponType::RifleType;
 };
 
 USTRUCT(BlueprintType)
@@ -192,9 +197,7 @@ USTRUCT(BlueprintType)
 struct FWeaponSlot
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Slot")
-	int32 SlotIndex;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Slot")
 	FName ItemName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Slot")

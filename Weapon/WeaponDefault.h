@@ -11,7 +11,7 @@
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFireStart);//ToDo Delegate on event weapon fire - Anim char, state char...
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponReloadStart, UAnimMontage*, AnimReloadHip, UAnimMontage*, AnimReloadIronsight);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadEnd, bool, bIsSucces);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponReloadEnd, bool, bIsSucces, int32, AmmoLeft);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponFireStart, UAnimMontage*, AnimFireHip, UAnimMontage*, AnimFireIronsight);
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFireStart, UAnimMontage*, AnimFire);
 

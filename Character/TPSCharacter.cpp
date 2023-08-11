@@ -422,9 +422,14 @@ void ATPSCharacter::WeaponReloadStart(UAnimMontage* AnimReloadHip, UAnimMontage*
 	WeaponReloadStart_BP(AnimReloadHip, AnimReloadIronsight);
 }
 
-void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess)
+void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoLeft)
 {
-	WeaponReloadEnd_BP(bIsSuccess);
+	if (InventoryComponent && CurrentWeapon)
+	{
+		InventoryComponent->WeaponChangeAmmo(CurrentWeapon->WeaponSetting.WeaponType, AmmoLeft);
+	}
+	
+	WeaponReloadEnd_BP(bIsSuccess, AmmoLeft);
 }
 
 void ATPSCharacter::WeaponFireStart(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight)
@@ -437,7 +442,7 @@ void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* AnimReload
 	// in BP
 }
 
-void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSucces)
+void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSucces, int32 AmmoLeft)
 {
 	// in BP
 }
