@@ -351,6 +351,11 @@ void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdd
 					MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
 					
 					MyWeapon->OnWeaponFireStart.AddDynamic(this, &ATPSCharacter::WeaponFireStart);
+
+					if (CurrentWeapon->GetWeaponMagazine() <= 0 && CurrentWeapon->CheckCanWeaponReload())
+						CurrentWeapon->InitReload();
+
+					// OnWeaponAmmoAvailable
 				}
 			}
 		}
@@ -374,12 +379,10 @@ void ATPSCharacter::TrySwitchToNextWeapon()
 				CurrentWeapon->CancelReload();
 		}
 
+		// ToDo Bug with reset reload when switch
 		if (InventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentWeaponIndex + 1, OldIndex, OldAdditionalInfo))
-			{
-				
-			}
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentWeaponIndex + 1, OldIndex, OldAdditionalInfo, true)) { }
 		}
 	}
 }
@@ -399,10 +402,7 @@ void ATPSCharacter::TrySwitchToPreviousWeapon()
 
 		if (InventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentWeaponIndex - 1, OldIndex, OldAdditionalInfo))
-			{
-				
-			}
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentWeaponIndex - 1, OldIndex, OldAdditionalInfo, false)) { }
 		}
 	}
 }

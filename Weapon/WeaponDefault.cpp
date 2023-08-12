@@ -55,24 +55,24 @@ void AWeaponDefault::Tick(float DeltaTime)
 
 void AWeaponDefault::FireTick(float DeltaTime)
 {
-	if (GetWeaponMagazine() > 0)
-	{
-		if (WeaponFiring)
-			if (FireTimer < 0.f)
-			{
-				if (!WeaponReloading)
-					Fire();
-			}
-			else
-				FireTimer -= DeltaTime;
-	}
-	else
-	{
-		if (!WeaponReloading && CheckCanWeaponReload())
+	// if (GetWeaponMagazine() > 0)
+	
+	if (WeaponFiring && GetWeaponMagazine() > 0 && !WeaponReloading)
+		if (FireTimer < 0.f)
 		{
-			InitReload();
+			if (!WeaponReloading)
+				Fire();
 		}
-	}
+		else
+			FireTimer -= DeltaTime;
+	
+	// else
+	// {
+	// 	if (!WeaponReloading && CheckCanWeaponReload())
+	// 	{
+	// 		InitReload();
+	// 	}
+	// }
 }
 
 void AWeaponDefault::ReloadTick(float DeltaTime)
@@ -290,6 +290,12 @@ void AWeaponDefault::Fire()
 			}
 		}				
 	}
+
+	if (GetWeaponMagazine() <= 0 && !WeaponReloading)
+	{
+		if (CheckCanWeaponReload())
+			InitReload();
+	}
 }
 
 void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
@@ -441,15 +447,22 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
-	int8 AvailableAmmoForInventory = GetAvailableAmmoForReload();
+	int8 AvailableAmmoFromInventory = GetAvailableAmmoForReload();
+	int8 AmmoToTakeFromInventory;
+	int8 AmmoToReload = WeaponSetting.MaxMagazineCapacity - AdditionalWeaponInfo.MagazineCapacity;
 
-	if (AvailableAmmoForInventory > WeaponSetting.MaxMagazineCapacity)
-		AvailableAmmoForInventory = WeaponSetting.MaxMagazineCapacity;
+	if (AmmoToReload > AvailableAmmoFromInventory)
+	{
+		AdditionalWeaponInfo.MagazineCapacity = AvailableAmmoFromInventory;
+		AmmoToTakeFromInventory = AvailableAmmoFromInventory;
+	}
+	else
+	{
+		AdditionalWeaponInfo.MagazineCapacity += AmmoToReload;
+		AmmoToTakeFromInventory = AmmoToReload;
+	}
 	
-	int32 AmmoToTake = AvailableAmmoForInventory - AdditionalWeaponInfo.MagazineCapacity;
-	AdditionalWeaponInfo.MagazineCapacity = AvailableAmmoForInventory;
-	
-	OnWeaponReloadEnd.Broadcast(true, AmmoToTake);
+	OnWeaponReloadEnd.Broadcast(true, AmmoToTakeFromInventory);
 }
 
 void AWeaponDefault::CancelReload()
