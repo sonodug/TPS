@@ -158,6 +158,8 @@ void UInventoryComponent::SetAdditionalWeaponInfo(int32 WeaponIndex, FAdditional
 			{
 				WeaponSlots[i].AdditionalWeaponInfo = NewInfo;
 				bIsFind = true;
+				
+				OnWeaponAdditionalInfoChanged.Broadcast(WeaponIndex, NewInfo);
 			}
 			i++;
 		}
@@ -177,7 +179,7 @@ void UInventoryComponent::WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToT
 		if (AmmoSlots[i].WeaponType == WeaponType)
 		{
 			AmmoSlots[i].Count -= AmmoToTake;
-			if (AmmoSlots[i].Count > AmmoSlots[i].MaxCount || AmmoSlots[i].Count < 0)
+			if (AmmoSlots[i].Count > AmmoSlots[i].MaxCount)
 				AmmoSlots[i].Count = AmmoSlots[i].MaxCount;
 
 			OnAmmoChanged.Broadcast(AmmoSlots[i].WeaponType, AmmoSlots[i].Count);
@@ -187,3 +189,22 @@ void UInventoryComponent::WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToT
 	}
 }
 
+bool UInventoryComponent::CheckAmmoForWeapon(EWeaponType WeaponType, int8 &AvailableAmmoForWeapon)
+{  
+	AvailableAmmoForWeapon = 0;
+	bool bIsFind = false;
+	int8 i = 0;
+	while (i < AmmoSlots.Num() && !bIsFind)
+	{
+		if (AmmoSlots[i].WeaponType == WeaponType)
+		{
+			bIsFind = true;
+			AvailableAmmoForWeapon = AmmoSlots[i].Count;
+			if (AmmoSlots[i].Count > 0)
+				return true;
+		}
+		i++;
+	}
+	
+	return false;
+}

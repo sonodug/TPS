@@ -68,15 +68,16 @@ public:
 
 	//Weapon	
 	AWeaponDefault* CurrentWeapon = nullptr;
-	int32 CurrentIndexWeapon = 0;
+	int32 CurrentWeaponIndex = 0;
 
 	//Debug demo
+	// DEBUG ONLY
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
-	FName InitWeaponName;
+	FName InitWeaponNameDebug;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
-	FAdditionalWeaponInfo InitWeaponInfo;
+	FAdditionalWeaponInfo InitWeaponInfoDebug;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Demo")
-	FName CurrentWeaponName;
+	FName CurrentWeaponNameDebug;
 	
 	UDecalComponent* CurrentCursor = nullptr;
  

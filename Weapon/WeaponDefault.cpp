@@ -4,6 +4,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "TPS/Character/InventoryComponent.h"
 
 // Sets default values
 AWeaponDefault::AWeaponDefault()
@@ -67,7 +68,7 @@ void AWeaponDefault::FireTick(float DeltaTime)
 	}
 	else
 	{
-		if (!WeaponReloading)
+		if (!WeaponReloading && CheckCanWeaponReload())
 		{
 			InitReload();
 		}
@@ -130,7 +131,7 @@ void AWeaponDefault::WeaponInit()
 	{
 		StaticMeshWeapon->DestroyComponent();
 	}
-
+	
 	UpdateStateWeapon(EMovementState::WalkState);
 }
 
@@ -411,7 +412,6 @@ void AWeaponDefault::InitReload()
 	
 	if (WeaponSetting.DroppedMagazine)
 	{
-
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		SpawnParams.Owner = GetOwner();
@@ -441,8 +441,13 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
-	int32 AmmoToTake = WeaponSetting.MaxMagazineCapacity - AdditionalWeaponInfo.MagazineCapacity;
-	AdditionalWeaponInfo.MagazineCapacity = WeaponSetting.MaxMagazineCapacity;
+	int8 AvailableAmmoForInventory = GetAvailableAmmoForReload();
+
+	if (AvailableAmmoForInventory > WeaponSetting.MaxMagazineCapacity)
+		AvailableAmmoForInventory = WeaponSetting.MaxMagazineCapacity;
+	
+	int32 AmmoToTake = AvailableAmmoForInventory - AdditionalWeaponInfo.MagazineCapacity;
+	AdditionalWeaponInfo.MagazineCapacity = AvailableAmmoForInventory;
 	
 	OnWeaponReloadEnd.Broadcast(true, AmmoToTake);
 }
@@ -455,4 +460,42 @@ void AWeaponDefault::CancelReload()
 
 	OnWeaponReloadEnd.Broadcast(false, 0);
 	DropClip = false;
+}
+
+bool AWeaponDefault::CheckCanWeaponReload()
+{
+	bool bResult = true;
+	if (GetOwner())
+	{
+		UInventoryComponent* InventoryComponent = Cast<UInventoryComponent>(GetOwner()->GetComponentByClass(UInventoryComponent::StaticClass()));
+		if (InventoryComponent)
+		{
+			int8 ResultAmmo;
+			if (!InventoryComponent->CheckAmmoForWeapon(WeaponSetting.WeaponType, ResultAmmo))
+			{
+				bResult = false;
+			}
+		}
+	}
+
+	return bResult;
+}
+
+int8 AWeaponDefault::GetAvailableAmmoForReload()
+{
+	int8 ResultAmmo = WeaponSetting.MaxMagazineCapacity;
+
+	if (GetOwner())
+	{
+		UInventoryComponent* InventoryComponent = Cast<UInventoryComponent>(GetOwner()->GetComponentByClass(UInventoryComponent::StaticClass()));
+		if (InventoryComponent)
+		{
+			if (InventoryComponent->CheckAmmoForWeapon(WeaponSetting.WeaponType, ResultAmmo))
+			{
+				// ResultAmmo = Result.Ammo;
+			}
+		}
+	}
+
+	return ResultAmmo;
 }

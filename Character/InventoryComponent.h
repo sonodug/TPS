@@ -9,6 +9,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSwitchWeapon, FName, WeaponIdName, FAdditionalWeaponInfo, WeaponAdditionalInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, EWeaponType, AmmoType, int32, Count);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAdditionalInfoChanged, int32, SlotIndex, FAdditionalWeaponInfo, Info);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_API UInventoryComponent : public UActorComponent
@@ -21,6 +22,8 @@ public:
 	FOnSwitchWeapon OnSwitchWeapon;
 	UPROPERTY(BlueprintAssignable, Category="Inventory")
 	FOnAmmoChanged OnAmmoChanged;
+	UPROPERTY(BlueprintAssignable, Category="Inventory")
+	FOnWeaponAdditionalInfoChanged OnWeaponAdditionalInfoChanged;
 
 protected:
 	// Called when the game starts
@@ -44,4 +47,5 @@ public:
 
 	// govno -> rename
 	void WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToTake);
+	bool CheckAmmoForWeapon(EWeaponType WeaponType, int8 &AvailableAmmoForWeapon);
 };

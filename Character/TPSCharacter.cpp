@@ -125,8 +125,8 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitWeapon(InitWeaponName, InitWeaponInfo);
-	CurrentWeaponName = InitWeaponName;
+	InitWeapon(InitWeaponNameDebug, InitWeaponInfoDebug);
+	CurrentWeaponNameDebug = InitWeaponNameDebug;
 
 	if (CursorMaterial)
 	{
@@ -319,7 +319,7 @@ void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdd
 	{
 		if (GameInstance->GetWeaponInfoByName(WeaponName, WeaponInfo))
 		{
-			CurrentWeaponName = WeaponName;
+			CurrentWeaponNameDebug = WeaponName;
 			
 			if (WeaponInfo.WeaponClass)
 			{
@@ -328,7 +328,7 @@ void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdd
 
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				SpawnParams.Owner = GetOwner();
+				SpawnParams.Owner = this;
 				SpawnParams.Instigator = GetInstigator();
 
 				AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(WeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
@@ -337,7 +337,6 @@ void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdd
 					FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
 					MyWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
 					CurrentWeapon = MyWeapon;
-					
 					MyWeapon->WeaponSetting = WeaponInfo;
 					MyWeapon->AdditionalWeaponInfo.MagazineCapacity = WeaponInfo.MaxMagazineCapacity;
 					//Remove !!! Debug
@@ -346,7 +345,7 @@ void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdd
 
 					MyWeapon->AdditionalWeaponInfo = WeaponAdditionalInfo;
 					if (InventoryComponent)
-						CurrentIndexWeapon = InventoryComponent->GetWeaponSlotIndexByName(WeaponName);
+						CurrentWeaponIndex = InventoryComponent->GetWeaponSlotIndexByName(WeaponName);
 					
 					MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
 					MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
@@ -366,7 +365,7 @@ void ATPSCharacter::TrySwitchToNextWeapon()
 {
 	if (InventoryComponent->WeaponSlots.Num() > 1)
 	{
-		int8 OldIndex = CurrentIndexWeapon;
+		int8 OldIndex = CurrentWeaponIndex;
 		FAdditionalWeaponInfo OldAdditionalInfo;
 		if (CurrentWeapon)
 		{
@@ -377,7 +376,7 @@ void ATPSCharacter::TrySwitchToNextWeapon()
 
 		if (InventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon + 1, OldIndex, OldAdditionalInfo))
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentWeaponIndex + 1, OldIndex, OldAdditionalInfo))
 			{
 				
 			}
@@ -389,7 +388,7 @@ void ATPSCharacter::TrySwitchToPreviousWeapon()
 {
 	if (InventoryComponent->WeaponSlots.Num() > 1)
 	{
-		int8 OldIndex = CurrentIndexWeapon;
+		int8 OldIndex = CurrentWeaponIndex;
 		FAdditionalWeaponInfo OldAdditionalInfo;
 		if (CurrentWeapon)
 		{
@@ -400,7 +399,7 @@ void ATPSCharacter::TrySwitchToPreviousWeapon()
 
 		if (InventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon - 1, OldIndex, OldAdditionalInfo))
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentWeaponIndex - 1, OldIndex, OldAdditionalInfo))
 			{
 				
 			}
@@ -412,7 +411,7 @@ void ATPSCharacter::TryReloadWeapon()
 {
 	if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
-		if (CurrentWeapon->GetWeaponMagazine() < CurrentWeapon->WeaponSetting.MaxMagazineCapacity)
+		if (CurrentWeapon->GetWeaponMagazine() < CurrentWeapon->WeaponSetting.MaxMagazineCapacity && CurrentWeapon->CheckCanWeaponReload())
 			CurrentWeapon->InitReload();
 	}
 }
@@ -427,6 +426,7 @@ void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoLeft)
 	if (InventoryComponent && CurrentWeapon)
 	{
 		InventoryComponent->WeaponChangeAmmo(CurrentWeapon->WeaponSetting.WeaponType, AmmoLeft);
+		InventoryComponent->SetAdditionalWeaponInfo(CurrentWeaponIndex, CurrentWeapon->AdditionalWeaponInfo);
 	}
 	
 	WeaponReloadEnd_BP(bIsSuccess, AmmoLeft);
@@ -434,6 +434,11 @@ void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoLeft)
 
 void ATPSCharacter::WeaponFireStart(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight)
 {
+	if (InventoryComponent && CurrentWeapon)
+	{
+		InventoryComponent->SetAdditionalWeaponInfo(CurrentWeaponIndex, CurrentWeapon->AdditionalWeaponInfo);
+	}
+	
 	WeaponFireStart_BP(AnimFireHip, AnimFireIronsight);
 }
 

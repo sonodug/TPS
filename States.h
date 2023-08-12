@@ -188,7 +188,7 @@ USTRUCT(BlueprintType)
 struct FAdditionalWeaponInfo
 {
 	GENERATED_BODY()
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
 	int32 MagazineCapacity = 10;
 };

@@ -58,7 +58,7 @@ public:
 	void DispersionTick(float DeltaTime);
 
 	void WeaponInit();
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireLogic")
 	bool WeaponFiring = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic")
@@ -107,6 +107,9 @@ public:
 	void InitReload();
 	void FinishReload();
 	void CancelReload();
+
+	bool CheckCanWeaponReload();
+	int8 GetAvailableAmmoForReload();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool ShowDebug = false;
