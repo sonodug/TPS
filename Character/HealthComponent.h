@@ -42,6 +42,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Heath")
 	float GetCurrentHealth();
 	UFUNCTION(BlueprintCallable, Category="Heath")
+	void SetCurrentHealth(float NewHealth);
+	UFUNCTION(BlueprintCallable, Category="Heath")
 	virtual void ChangeHealthValue(float Value);
 	UFUNCTION(BlueprintNativeEvent)
 	void Dead();

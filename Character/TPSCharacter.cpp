@@ -49,11 +49,13 @@ ATPSCharacter::ATPSCharacter()
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	CharacterHealthComponent = CreateDefaultSubobject<UCharacterHealthComponent>(TEXT("CharacterHealthComponent"));
 
+	if (CharacterHealthComponent)
+		CharacterHealthComponent->OnDead.AddDynamic(this, &ATPSCharacter::Dead);
+	
 	if (InventoryComponent)
-	{
 		InventoryComponent->OnSwitchWeapon.AddDynamic(this, &ATPSCharacter::InitWeapon);
-	}
 
 	// Create a decal in the world to show the cursor's location
 	/*CursorToWorld = CreateDefaultSubobject<UDecalComponent>("CursorToWorld");
@@ -459,5 +461,18 @@ void ATPSCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* AnimFireHip,
 UDecalComponent* ATPSCharacter::GetCursorToWorld()
 {
 	return CurrentCursor;
+}
+
+void ATPSCharacter::Dead()
+{
+	
+}
+
+float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+                                AActor* DamageCauser)
+{
+	CharacterHealthComponent->ChangeHealthValue(-DamageAmount);
+	
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 

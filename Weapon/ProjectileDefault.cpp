@@ -87,7 +87,7 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 
 			if (MyMaterial && OtherComp)
 			{
-				UGameplayStatics::SpawnDecalAttached(MyMaterial, FVector(20.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(),EAttachLocation::KeepWorldPosition,10.0f);
+				UGameplayStatics::SpawnDecalAttached(MyMaterial, FVector(15.0f), OtherComp, NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(),EAttachLocation::KeepWorldPosition,10.0f);
 			}
 		}
 		if (ProjectileSetting.HitFXs.Contains(SurfaceType))

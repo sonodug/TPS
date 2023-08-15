@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CharacterHealthComponent.h"
+#include "HealthComponent.h"
 #include "InventoryComponent.h"
 #include "../Weapon/WeaponDefault.h"
 #include "GameFramework/Character.h"
@@ -44,6 +46,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UCharacterHealthComponent* CharacterHealthComponent;
 
 public:
 	//Cursor
@@ -111,10 +115,13 @@ public:
 	void InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo);
 	UFUNCTION(BlueprintCallable)
 	void TryReloadWeapon();
+
+	//Inventory
 	UFUNCTION()
 	void TrySwitchToNextWeapon();
 	UFUNCTION()
 	void TrySwitchToPreviousWeapon();
+	
 	UFUNCTION()
 	void WeaponReloadStart(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight);
 	UFUNCTION()
@@ -130,5 +137,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
+
+	// BlueprintCallable macros parameter - default
+	UFUNCTION(BlueprintCallable)
+	void Dead();
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };
 

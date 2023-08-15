@@ -36,14 +36,21 @@ float UHealthComponent::GetCurrentHealth()
 	return Health;
 }
 
+void UHealthComponent::SetCurrentHealth(float NewHealth)
+{
+	Health = NewHealth;
+}
+
 void UHealthComponent::ChangeHealthValue(float Value)
 {
-	Health -= Value;
-	OnHealthChanged.Broadcast(Health, Value);
+	Health += Value;
+	OnHealthChanged.Broadcast(Health, -Value);
+
+	if (Health > 100.0f)
+		Health = 100.0f;
 	
 	if (Health <= 0.0f)
 		OnDead.Broadcast();
-
 }
 
 void UHealthComponent::Dead_Implementation()
