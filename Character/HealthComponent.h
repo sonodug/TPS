@@ -39,6 +39,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Health")
+	float CoefDamage;
+	
 	UFUNCTION(BlueprintCallable, Category="Heath")
 	float GetCurrentHealth();
 	UFUNCTION(BlueprintCallable, Category="Heath")

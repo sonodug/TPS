@@ -10,7 +10,7 @@
  * 
  */
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShieldChange, float, Shield, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShieldChanged, float, Shield, float, Damage);
 
 UCLASS()
 class TPS_API UCharacterHealthComponent : public UHealthComponent
@@ -18,13 +18,13 @@ class TPS_API UCharacterHealthComponent : public UHealthComponent
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Health")
-	FOnShieldChange OnShieldChange;
+	FOnShieldChanged OnShieldChanged;
 
 	FTimerHandle TimerHandle_CollDownShieldTimer;
 	FTimerHandle TimerHandle_ShieldRecoveryRateTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shield")
-	float CoolDownShieldRecoverTime = 5.0f;
+	float CooldownShieldRecoverTime = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shield")
 	float ShieldRecoverValue = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shield")
@@ -34,7 +34,7 @@ protected:
 	float Shield = 100.0f;
 
 public:
-	void ChangeHealthValue(float Value) override;
+	virtual void ChangeHealthValue(float Value) override;
 	float GetCurrentShield();
 	void ChangeShieldValue(float Value);
 	void CoolDownShieldEnd();

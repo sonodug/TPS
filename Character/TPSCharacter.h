@@ -18,7 +18,7 @@ class ATPSCharacter : public ACharacter
 
 public:
 	ATPSCharacter();
-
+	
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
@@ -44,12 +44,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UDecalComponent* CursorToWorld;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory, meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent* InventoryComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
 	UCharacterHealthComponent* CharacterHealthComponent;
 
 public:
+	//Dead
+	FTimerHandle RagdollTimerHandle;
+	
 	//Cursor
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cursor")
 	UMaterialInterface* CursorMaterial = nullptr;
@@ -70,6 +73,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	bool CrouchEnabled = false;
 
+	//Dead
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="OtherStates")
+	bool bIsAlive = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="OtherStates")
+	TArray<UAnimMontage*> DeadAnimMontages;
+	
 	//Weapon	
 	AWeaponDefault* CurrentWeapon = nullptr;
 	int32 CurrentWeaponIndex = 0;
@@ -141,6 +150,8 @@ public:
 	// BlueprintCallable macros parameter - default
 	UFUNCTION(BlueprintCallable)
 	void Dead();
+	void EnableRagdoll(); 
+	
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };

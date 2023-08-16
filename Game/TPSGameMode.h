@@ -13,4 +13,7 @@ class ATPSGameMode : public AGameModeBase
 
 public:
 	ATPSGameMode();
+
+	//Custom
+	void PlayerCharacterDead();
 };

@@ -38,4 +38,8 @@ protected:
 	/** Input handlers for SetDestination action. */
 	void OnSetDestinationPressed();
 	void OnSetDestinationReleased();
+
+	virtual void OnUnPossess() override;
+	
+	//Custom
 };
