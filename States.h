@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "StateEffect.h"
 #include "Engine/DataTable.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "States.generated.h"
@@ -67,7 +68,10 @@ struct FProjectileInfo
 	//fx when hit check by surface
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
 	TMap<TEnumAsByte<EPhysicalSurface>, UParticleSystem*> HitFXs;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	TSubclassOf<UStateEffect> Effect = nullptr;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
 	UParticleSystem* ExploseFX = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")

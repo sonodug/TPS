@@ -3,6 +3,8 @@
 
 #include "EnvironmentStructure.h"
 
+#include "PhysicalMaterials/PhysicalMaterial.h"
+
 // Sets default values
 AEnvironmentStructure::AEnvironmentStructure()
 {
@@ -25,15 +27,19 @@ void AEnvironmentStructure::Tick(float DeltaTime)
 
 }
 
-bool AEnvironmentStructure::AvaialableForEffects_Implementation()
+EPhysicalSurface AEnvironmentStructure::GetSurfaceType()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ATestInterface::AvaialableForEffects_Implementation()"));
-	return true;
-}
+	EPhysicalSurface Result = EPhysicalSurface::SurfaceType1;
+	UStaticMeshComponent* myMesh = Cast<UStaticMeshComponent>(GetComponentByClass(UStaticMeshComponent::StaticClass()));
+	if (myMesh)
+	{
+		UMaterialInterface* myMaterial = myMesh->GetMaterial(0);
+		if (myMaterial)
+		{
+			Result = myMaterial->GetPhysicalMaterial()->SurfaceType;
+		}
+	}
 
-bool AEnvironmentStructure::AvailableForEffectsOnlyCPP()
-{
-	UE_LOG(LogTemp, Warning, TEXT("ATestInterface::AvailableForEffectsOnlyCPP()"));
-	return true;
+	return Result;
 }
 

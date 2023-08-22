@@ -18,3 +18,8 @@ void UStateEffect::DestroyObject()
 {
 	
 }
+
+bool UStateEffect::CheckCanStack()
+{
+	
+}

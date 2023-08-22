@@ -14,7 +14,13 @@ class TPS_API UStateEffect : public UObject
 {
 	GENERATED_BODY()
 
+public:
 	virtual bool InitObject(APawn* Pawn);
 	virtual bool ExecuteObject(float DeltaTime);
 	virtual void DestroyObject();
+
+	virtual bool CheckCanStack();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
+	TArray<TEnumAsByte<EPhysicalSurface>> InteractableSurfaces;
 };

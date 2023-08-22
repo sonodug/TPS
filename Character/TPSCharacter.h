@@ -155,7 +155,6 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	//Interface
-	virtual bool AvaialableForEffects_Implementation() override;
-	virtual bool AvailableForEffectsOnlyCPP() override;
+	virtual EPhysicalSurface GetSurfaceType() override;
 };
 

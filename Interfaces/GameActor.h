@@ -22,10 +22,5 @@ class TPS_API IGameActor
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category="Event")
-	void AvailableForEffectsBP();
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Event")
-	bool AvaialableForEffects();
-
-	virtual bool AvailableForEffectsOnlyCPP();
+	virtual EPhysicalSurface GetSurfaceType();
 };

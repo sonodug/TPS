@@ -258,10 +258,23 @@ void AWeaponDefault::Fire()
 					{
 						//UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, FName("Effect"));
 						IGameActor* myInterface = Cast<IGameActor>(HitActor);
+
+						// CPP call
 						if (myInterface)
 						{
-							
+							EPhysicalSurface mySurface;
+							mySurface = myInterface->GetSurfaceType();
+							if (mySurface != EPhysicalSurface::SurfaceType1)
+							{
+								if (ProjectileInfo.)
+							}
 						}
+						
+						// Blueprint call (execute)
+						// if (HitActor->GetClass()->ImplementsInterface(UGameActor::StaticClass()))
+						// {
+							//IGameActor::Execute_
+						//}
 						
 						UGameplayStatics::ApplyDamage(HitActor, 10.f, GetInstigatorController(), this, NULL);
 					}

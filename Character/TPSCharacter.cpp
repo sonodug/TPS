@@ -19,6 +19,7 @@
 #include "../Game/WeaponGameInstance.h"
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 #define START_SPEED 300.f;
 
@@ -504,12 +505,22 @@ float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
-bool ATPSCharacter::AvaialableForEffects_Implementation()
+EPhysicalSurface ATPSCharacter::GetSurfaceType()
 {
-	return true;
-}
+	EPhysicalSurface Result = EPhysicalSurface::SurfaceType1;
+	
+	if (CharacterHealthComponent)
+	{
+		if (CharacterHealthComponent->GetCurrentShield() <= 0)
+		{
+			if (GetMesh())
+			{
+				UMaterialInterface* myMaterial = GetMesh()->GetMaterial(0);
+				if (myMaterial)
+					Result = myMaterial->GetPhysicalMaterial()->SurfaceType;
+			}
+		}
+	}
 
-bool ATPSCharacter::AvailableForEffectsOnlyCPP()
-{
-	return true;
+	return Result;
 }
