@@ -9,10 +9,11 @@
 #include "../Weapon/WeaponDefault.h"
 #include "GameFramework/Character.h"
 #include "TPS/States.h"
+#include "TPS/Interfaces/GameActor.h"
 #include "TPSCharacter.generated.h"
 
 UCLASS(Blueprintable)
-class ATPSCharacter : public ACharacter
+class ATPSCharacter : public ACharacter, public IGameActor
 {
 	GENERATED_BODY()
 
@@ -150,9 +151,11 @@ public:
 	// BlueprintCallable macros parameter - default
 	UFUNCTION(BlueprintCallable)
 	void Dead();
-	void EnableRagdoll(); 
-	
-
+	void EnableRagdoll();
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	//Interface
+	virtual bool AvaialableForEffects_Implementation() override;
+	virtual bool AvailableForEffectsOnlyCPP() override;
 };
 

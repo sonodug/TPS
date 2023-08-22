@@ -4,7 +4,9 @@
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "TPS/StateEffect.h"
 #include "TPS/Character/InventoryComponent.h"
+#include "TPS/Interfaces/GameActor.h"
 
 // Sets default values
 AWeaponDefault::AWeaponDefault()
@@ -254,6 +256,13 @@ void AWeaponDefault::Fire()
 					AActor* HitActor = HitResult.GetActor();
 					if (HitActor)
 					{
+						//UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, FName("Effect"));
+						IGameActor* myInterface = Cast<IGameActor>(HitActor);
+						if (myInterface)
+						{
+							
+						}
+						
 						UGameplayStatics::ApplyDamage(HitActor, 10.f, GetInstigatorController(), this, NULL);
 					}
 					

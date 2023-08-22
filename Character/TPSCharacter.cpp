@@ -11,12 +11,14 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "TimerManager.h"
 #include "Materials/Material.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "../Game/WeaponGameInstance.h"
-#include "HoloLens/AllowWindowsPlatformTypes.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #define START_SPEED 300.f;
 
@@ -502,3 +504,12 @@ float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
+bool ATPSCharacter::AvaialableForEffects_Implementation()
+{
+	return true;
+}
+
+bool ATPSCharacter::AvailableForEffectsOnlyCPP()
+{
+	return true;
+}
