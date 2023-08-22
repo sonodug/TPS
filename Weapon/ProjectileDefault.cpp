@@ -3,6 +3,7 @@
 #include "../Weapon/ProjectileDefault.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet/GameplayStatics.h"
+#include "TPS/Interfaces/GameActor.h"
 
 // Sets default values
 AProjectileDefault::AProjectileDefault()
@@ -103,8 +104,15 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSetting.HitSound, Hit.ImpactPoint);
 		}
+		
+		IGameActor* myInterface = Cast<IGameActor>(Hit.GetActor());
 	
+		if (myInterface)
+		{
+			UStates::AddEffectBySurfaceType(ProjectileSetting.Effect, SurfaceType, Hit.GetActor());
+		}
 	}
+	
 	UGameplayStatics::ApplyDamage(OtherActor, ProjectileSetting.ProjectileDamage, GetInstigatorController(), this, NULL);
 	ImpactProjectile();	
 	//UGameplayStatics::ApplyRadialDamageWithFalloff()

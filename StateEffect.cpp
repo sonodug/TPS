@@ -4,8 +4,9 @@
 #include "StateEffect.h"
 
 
-bool UStateEffect::InitObject(APawn* Pawn)
+bool UStateEffect::InitObject()
 {
+	UE_LOG(LogTemp, Warning, TEXT("UStateEffect::InitObject()"));
 	return true;
 }
 
@@ -21,5 +22,5 @@ void UStateEffect::DestroyObject()
 
 bool UStateEffect::CheckCanStack()
 {
-	
+	return true;
 }

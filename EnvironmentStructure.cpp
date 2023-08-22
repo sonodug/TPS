@@ -29,7 +29,7 @@ void AEnvironmentStructure::Tick(float DeltaTime)
 
 EPhysicalSurface AEnvironmentStructure::GetSurfaceType()
 {
-	EPhysicalSurface Result = EPhysicalSurface::SurfaceType1;
+	EPhysicalSurface Result = EPhysicalSurface::SurfaceType_Default;
 	UStaticMeshComponent* myMesh = Cast<UStaticMeshComponent>(GetComponentByClass(UStaticMeshComponent::StaticClass()));
 	if (myMesh)
 	{

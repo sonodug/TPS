@@ -507,7 +507,7 @@ float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 
 EPhysicalSurface ATPSCharacter::GetSurfaceType()
 {
-	EPhysicalSurface Result = EPhysicalSurface::SurfaceType1;
+	EPhysicalSurface Result = EPhysicalSurface::SurfaceType_Default;
 	
 	if (CharacterHealthComponent)
 	{

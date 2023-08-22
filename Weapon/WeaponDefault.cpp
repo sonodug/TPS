@@ -4,6 +4,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TPS/StateEffect.h"
 #include "TPS/Character/InventoryComponent.h"
 #include "TPS/Interfaces/GameActor.h"
@@ -239,75 +240,51 @@ void AWeaponDefault::Fire()
 			}
 			else
 			{
-				FHitResult HitResult;
-				FCollisionQueryParams CollisionParams;
-				CollisionParams.AddIgnoredActor(this);
+				FHitResult Hit;
+				TArray<AActor*> Actors;				
 
-				bool bHit = GetWorld()->LineTraceSingleByChannel(
-					HitResult,
-					SpawnLocation,
-					EndLocation,
-					ECC_Visibility, //change
-					CollisionParams
-				);
-
-				if (bHit)
-				{
-					AActor* HitActor = HitResult.GetActor();
-					if (HitActor)
+				EDrawDebugTrace::Type DebugTrace;
+				if (ShowDebug)
 					{
-						//UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, FName("Effect"));
-						IGameActor* myInterface = Cast<IGameActor>(HitActor);
+						DrawDebugLine(GetWorld(), SpawnLocation, SpawnLocation + ShootLocation->GetForwardVector()*WeaponSetting.DistacneTrace, FColor::Black, false, 5.f, (uint8)'\000', 0.5f);
+						DebugTrace = EDrawDebugTrace::ForDuration;
+					}
+				else
+					DebugTrace = EDrawDebugTrace::None;
+				
+				UKismetSystemLibrary::LineTraceSingle(GetWorld(), SpawnLocation, EndLocation * WeaponSetting.DistacneTrace,
+					ETraceTypeQuery::TraceTypeQuery4, false, Actors, DebugTrace, Hit, true, FLinearColor::Red,FLinearColor::Green, 5.0f);
+		
+				if (Hit.GetActor() && Hit.PhysMaterial.IsValid())
+				{
+					EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(Hit);
 
-						// CPP call
-						if (myInterface)
+					if (WeaponSetting.ProjectileSetting.HitDecals.Contains(mySurfacetype))
+					{
+						UMaterialInterface* myMaterial = WeaponSetting.ProjectileSetting.HitDecals[mySurfacetype];
+
+						if (myMaterial && Hit.GetComponent())
 						{
-							EPhysicalSurface mySurface;
-							mySurface = myInterface->GetSurfaceType();
-							if (mySurface != EPhysicalSurface::SurfaceType1)
-							{
-								if (ProjectileInfo.)
-							}
+							UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), Hit.GetComponent(), NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, 10.0f);
 						}
-						
-						// Blueprint call (execute)
-						// if (HitActor->GetClass()->ImplementsInterface(UGameActor::StaticClass()))
-						// {
-							//IGameActor::Execute_
-						//}
-						
-						UGameplayStatics::ApplyDamage(HitActor, 10.f, GetInstigatorController(), this, NULL);
+					}
+					if (WeaponSetting.ProjectileSetting.HitFXs.Contains(mySurfacetype))
+					{
+						UParticleSystem* myParticle = WeaponSetting.ProjectileSetting.HitFXs[mySurfacetype];
+						if (myParticle)
+						{
+							UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle, FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(1.0f)));
+						}
+					}
+
+					if (WeaponSetting.ProjectileSetting.HitSound)
+					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), WeaponSetting.ProjectileSetting.HitSound, Hit.ImpactPoint);
 					}
 					
-					DrawDebugLine(
-						GetWorld(),
-						SpawnLocation,
-						EndLocation,
-						FColor::Green,
-						false, 1, 0,
-						2.0f
-					);
-					
-					DrawDebugPoint(
-						GetWorld(),
-						HitResult.ImpactPoint,
-						10.0f,
-						FColor::Blue,
-						false,
-						1,
-						0
-					);			
-				}
-				else
-				{
-					DrawDebugLine(
-						GetWorld(),
-						SpawnLocation,
-						EndLocation,
-						FColor::Red,
-						true, 1, 0,
-						5.0f
-					);
+					UStates::AddEffectBySurfaceType(ProjectileInfo.Effect, mySurfacetype, Hit.GetActor());							
+												
+					UGameplayStatics::ApplyPointDamage(Hit.GetActor(), WeaponSetting.ProjectileSetting.ProjectileDamage, Hit.TraceStart,Hit, GetInstigatorController(),this,NULL);				
 				}
 			}
 		}				
