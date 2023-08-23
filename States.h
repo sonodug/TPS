@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "StateEffect.h"
+#include "StateEffects/StateEffect.h"
 #include "Engine/DataTable.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "States.generated.h"

@@ -5,7 +5,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
-#include "TPS/StateEffect.h"
+#include "TPS/StateEffects/StateEffect.h"
 #include "TPS/Character/InventoryComponent.h"
 #include "TPS/Interfaces/GameActor.h"
 

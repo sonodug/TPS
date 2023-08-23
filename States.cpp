@@ -21,9 +21,10 @@ void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysical
 				if (myEffect->InteractableSurfaces[i] == SurfaceType)
 				{
 					bIsCanBeAdded = true;
-					UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, FName("Effect"));
+					UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, Effect);
+					
 					if (NewEffect)
-						NewEffect->InitObject();
+						NewEffect->InitObject(HitActor);
 				}
 				i++;
 			}
