@@ -1,22 +1,33 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+   
 #include "../StateEffects/StateEffect.h"
 
 #include "../Character/CharacterHealthComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "TPS/Interfaces/GameActor.h"
 
 bool UStateEffect::InitObject(AActor* Actor)
 {
 	UE_LOG(LogTemp, Warning, TEXT("BaseSE"));
 	MyActor = Actor;
 	
+	IGameActor* myInterface = Cast<IGameActor>(MyActor);
+
+	if (myInterface)
+		myInterface->AddEffect(this);
+	
 	return true;
 }
 
 void UStateEffect::DestroyObject()
 {
+	IGameActor* myInterface = Cast<IGameActor>(MyActor);
+
+	if (myInterface)
+		myInterface->RemoveEffect(this);
+	
 	MyActor = nullptr;
 	
 	if (this && this->IsValidLowLevel())
@@ -32,7 +43,9 @@ void UStateEffect::DestroyObject()
 bool UStateEffect_Single::InitObject(AActor* Actor)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UStateEffect_Single"));
-	return Super::InitObject(Actor);
+	Super::InitObject(Actor);
+	ExecuteOnce();
+	return true;
 }
 
 void UStateEffect_Single::DestroyObject()
@@ -44,8 +57,8 @@ void UStateEffect_Single::ExecuteOnce()
 {
 	if (MyActor)
 	{
-		UCharacterHealthComponent* MyHealthComponent = Cast<UCharacterHealthComponent>(
-	MyActor->GetComponentByClass(UCharacterHealthComponent::StaticClass()));
+		UHealthComponent* MyHealthComponent = Cast<UHealthComponent>(
+	MyActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 		if (MyHealthComponent)
 		{

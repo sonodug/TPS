@@ -153,6 +153,8 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	
 	InputComponent->BindAction(TEXT("SwitchToNextWeapon"), IE_Pressed, this, &ATPSCharacter::TrySwitchToNextWeapon);
 	InputComponent->BindAction(TEXT("SwitchToPreviousWeapon"), IE_Pressed, this, &ATPSCharacter::TrySwitchToPreviousWeapon);
+	
+	InputComponent->BindAction(TEXT("AbilityAction"), IE_Pressed, this, &ATPSCharacter::TryAbilityEnabled);
 }
 
 void ATPSCharacter::InputAxisX(float Value)
@@ -416,9 +418,19 @@ void ATPSCharacter::TrySwitchToPreviousWeapon()
 	}
 }
 
+void ATPSCharacter::TryAbilityEnabled()
+{
+	if (AbilityEffect)
+	{
+		UStateEffect* NewEffect = NewObject<UStateEffect>(this, AbilityEffect);
+		if (NewEffect)
+			NewEffect->InitObject(this);
+	}
+}
+
 void ATPSCharacter::TryReloadWeapon()
 {
-	if (CurrentWeapon && !CurrentWeapon->WeaponReloading)
+	if (bIsAlive && CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
 		if (CurrentWeapon->GetWeaponMagazine() < CurrentWeapon->WeaponSetting.MaxMagazineCapacity && CurrentWeapon->CheckCanWeaponReload())
 			CurrentWeapon->InitReload();
@@ -465,6 +477,11 @@ void ATPSCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* AnimFireHip,
 {
 }
 
+void ATPSCharacter::CharDead_BP_Implementation()
+{
+	//BP implement
+}
+
 UDecalComponent* ATPSCharacter::GetCursorToWorld()
 {
 	return CurrentCursor;
@@ -481,10 +498,15 @@ void ATPSCharacter::Dead()
 		GetMesh()->GetAnimInstance()->Montage_Play(DeadAnimMontages[RandomAnimNumber]);
 	}
 	bIsAlive = false;
-	UnPossessed();
+
+	if (GetController())
+		GetController()->UnPossess();
+
+
 	//Ragdoll
 	GetWorldTimerManager().SetTimer(RagdollTimerHandle, this, &ATPSCharacter::EnableRagdoll, AnimRate - 0.1f, false);
 	GetCursorToWorld()->SetVisibility(false);
+	CharDead_BP();
 }
 
 void ATPSCharacter::EnableRagdoll()
@@ -523,4 +545,19 @@ EPhysicalSurface ATPSCharacter::GetSurfaceType()
 	}
 
 	return Result;
+}
+
+TArray<UStateEffect*> ATPSCharacter::GetAllCurrentEffects()
+{
+	return Effects;
+}
+
+void ATPSCharacter::AddEffect(UStateEffect* Effect)
+{
+	Effects.Add(Effect);
+}
+
+void ATPSCharacter::RemoveEffect(UStateEffect* Effect)
+{
+	Effects.Remove(Effect);
 }

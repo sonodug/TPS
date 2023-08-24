@@ -34,7 +34,8 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	float Health = 100.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Health")
+	float Health = 400.0f;
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

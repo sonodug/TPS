@@ -3,6 +3,7 @@
 
 #include "States.h"
 #include "TPS.h"
+#include "Interfaces/GameActor.h"
 
 
 void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysicalSurface SurfaceType, AActor* HitActor)
@@ -14,17 +15,46 @@ void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysical
 
 		if (myEffect)
 		{
-			bool bIsCanBeAdded = false;
+			bool bIsHavingInteractableSurface = false;
 			int8 i = 0;
-			while (i < myEffect->InteractableSurfaces.Num() && !bIsCanBeAdded)
+			while (i < myEffect->InteractableSurfaces.Num() && !bIsHavingInteractableSurface)
 			{
 				if (myEffect->InteractableSurfaces[i] == SurfaceType)
 				{
-					bIsCanBeAdded = true;
-					UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, Effect);
+					bIsHavingInteractableSurface = true;
+
+					bool bCanAddEffect = false;
+					if (!myEffect->bCanStack)
+					{
+						int8 j = 0;
+						TArray<UStateEffect*> CurrentEffects;
+						IGameActor* myInterface = Cast<IGameActor>(HitActor);
+						if (myInterface)
+							CurrentEffects = myInterface->GetAllCurrentEffects();
+
+						if (CurrentEffects.Num() > 0)
+						{
+							while (j < CurrentEffects.Num() && !bCanAddEffect)
+							{
+								if (CurrentEffects[j]->GetClass() != Effect)
+									bCanAddEffect = true;
+								
+								j++;
+							}
+						}
+						else
+							bCanAddEffect = true;
+					}
+					else
+						bCanAddEffect = true;
+
+					if (bCanAddEffect)
+					{
+						UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, Effect);
 					
-					if (NewEffect)
-						NewEffect->InitObject(HitActor);
+						if (NewEffect)
+							NewEffect->InitObject(HitActor);
+					}
 				}
 				i++;
 			}

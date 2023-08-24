@@ -43,3 +43,18 @@ EPhysicalSurface AEnvironmentStructure::GetSurfaceType()
 	return Result;
 }
 
+TArray<UStateEffect*> AEnvironmentStructure::GetAllCurrentEffects()
+{
+	return Effects;
+}
+
+void AEnvironmentStructure::AddEffect(UStateEffect* Effect)
+{
+	Effects.Add(Effect);
+}
+
+void AEnvironmentStructure::RemoveEffect(UStateEffect* Effect)
+{
+	Effects.Remove(Effect);
+}
+

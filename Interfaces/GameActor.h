@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TPS/StateEffects/StateEffect.h"
 #include "UObject/Interface.h"
 #include "GameActor.generated.h"
 
@@ -23,4 +24,8 @@ class TPS_API IGameActor
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	virtual EPhysicalSurface GetSurfaceType();
+	virtual TArray<UStateEffect*> GetAllCurrentEffects();
+	virtual void RemoveEffect(UStateEffect* Effect);
+	virtual void AddEffect(UStateEffect* Effect);
+	
 };

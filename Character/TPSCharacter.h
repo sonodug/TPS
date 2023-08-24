@@ -62,7 +62,7 @@ public:
 
 	//Movement
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
-	EMovementState MovementState = EMovementState::WalkState;
+	EMovementState MovementState = EMovementState::WalkState; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement") 
 	FCharacterSpeedInfo SpeedInfo;
@@ -79,7 +79,13 @@ public:
 	bool bIsAlive = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="OtherStates")
 	TArray<UAnimMontage*> DeadAnimMontages;
-	
+
+	//Effects
+	TArray<UStateEffect*> Effects;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AblilityEffect")
+	TSubclassOf<UStateEffect> AbilityEffect;
+	 
 	//Weapon	
 	AWeaponDefault* CurrentWeapon = nullptr;
 	int32 CurrentWeaponIndex = 0;
@@ -132,6 +138,8 @@ public:
 	UFUNCTION()
 	void TrySwitchToPreviousWeapon();
 	
+	void TryAbilityEnabled();
+	
 	UFUNCTION()
 	void WeaponReloadStart(UAnimMontage* AnimReloadHip, UAnimMontage* AnimReloadIronsight);
 	UFUNCTION()
@@ -144,6 +152,8 @@ public:
 	void WeaponReloadEnd_BP(bool bIsSucces, int32 AmmoLeft);
 	UFUNCTION(BlueprintNativeEvent)
 	void WeaponFireStart_BP(UAnimMontage* AnimFireHip, UAnimMontage* AnimFireIronsight);
+	UFUNCTION(BlueprintNativeEvent)
+	void CharDead_BP();
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
@@ -156,5 +166,8 @@ public:
 
 	//Interface
 	virtual EPhysicalSurface GetSurfaceType() override;
+	virtual TArray<UStateEffect*> GetAllCurrentEffects() override;
+	virtual void AddEffect(UStateEffect* Effect) override;
+	virtual void RemoveEffect(UStateEffect* Effect) override;
 };
 
