@@ -51,4 +51,7 @@ public:
 	// govno -> rename
 	void WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToTake);
 	bool CheckAmmoForWeapon(EWeaponType WeaponType, int8 &AvailableAmmoForWeapon);
+	
+	UFUNCTION(BlueprintCallable, Category = "Inv")
+	void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
 };

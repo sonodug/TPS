@@ -6,11 +6,10 @@
 #include "Interfaces/GameActor.h"
 
 
-void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysicalSurface SurfaceType, AActor* HitActor)
+void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, FName NameBoneHit, EPhysicalSurface SurfaceType, AActor* HitActor)
 {
 	if (SurfaceType != EPhysicalSurface::SurfaceType_Default && HitActor && Effect)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AddEffectBySurfaceType1"));
 		UStateEffect* myEffect = Cast<UStateEffect>(Effect.GetDefaultObject());
 
 		if (myEffect)
@@ -22,7 +21,6 @@ void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysical
 				if (myEffect->InteractableSurfaces[i] == SurfaceType)
 				{
 					bIsHavingInteractableSurface = true;
-
 					bool bCanAddEffect = false;
 					if (!myEffect->bCanStack)
 					{
@@ -51,9 +49,10 @@ void UStates::AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysical
 					if (bCanAddEffect)
 					{
 						UStateEffect* NewEffect = NewObject<UStateEffect>(HitActor, Effect);
-					
+
+						UE_LOG(LogTemp, Warning, TEXT("AddEffectBySurfaceType2"));
 						if (NewEffect)
-							NewEffect->InitObject(HitActor);
+							NewEffect->InitObject(HitActor, NameBoneHit);
 					}
 				}
 				i++;

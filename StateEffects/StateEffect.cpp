@@ -8,12 +8,12 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "TPS/Interfaces/GameActor.h"
 
-bool UStateEffect::InitObject(AActor* Actor)
+bool UStateEffect::InitObject(AActor* Actor, FName NameBoneHit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("BaseSE"));
-	MyActor = Actor;
+	TargetActor = Actor;
 	
-	IGameActor* myInterface = Cast<IGameActor>(MyActor);
+	IGameActor* myInterface = Cast<IGameActor>(TargetActor);
 
 	if (myInterface)
 		myInterface->AddEffect(this);
@@ -23,12 +23,12 @@ bool UStateEffect::InitObject(AActor* Actor)
 
 void UStateEffect::DestroyObject()
 {
-	IGameActor* myInterface = Cast<IGameActor>(MyActor);
+	IGameActor* myInterface = Cast<IGameActor>(TargetActor);
 
 	if (myInterface)
 		myInterface->RemoveEffect(this);
 	
-	MyActor = nullptr;
+	TargetActor = nullptr;
 	
 	if (this && this->IsValidLowLevel())
 	{
@@ -40,10 +40,10 @@ void UStateEffect::DestroyObject()
 
 //Single
 
-bool UStateEffect_Single::InitObject(AActor* Actor)
+bool UStateEffect_Single::InitObject(AActor* Actor, FName NameBoneHit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UStateEffect_Single"));
-	Super::InitObject(Actor);
+	Super::InitObject(Actor, NameBoneHit);
 	ExecuteOnce();
 	return true;
 }
@@ -55,10 +55,10 @@ void UStateEffect_Single::DestroyObject()
 
 void UStateEffect_Single::ExecuteOnce()
 {
-	if (MyActor)
+	if (TargetActor)
 	{
 		UHealthComponent* MyHealthComponent = Cast<UHealthComponent>(
-	MyActor->GetComponentByClass(UHealthComponent::StaticClass()));
+	TargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 		if (MyHealthComponent)
 		{
@@ -71,26 +71,40 @@ void UStateEffect_Single::ExecuteOnce()
 
 //Timer
 
-bool UStateEffect_Timer::InitObject(AActor* Actor)
+bool UStateEffect_Timer::InitObject(AActor* Actor, FName NameBoneHit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UStateEffect_Timer"));
 
-	Super::InitObject(Actor);
+	Super::InitObject(Actor, NameBoneHit);
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UStateEffect_Timer::DestroyObject, Timer, false);
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UStateEffect_Timer::Execute, RateTime, true);
 
 	if (ParticleEffect)
 	{
-		FName NameBoneToAttached;
+		FName NameBoneToAttached = NameBoneHit;
 		FVector Location = FVector(0);
-		ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
-			ParticleEffect,
-			MyActor->GetRootComponent(),
-			NameBoneToAttached,
-			Location,
-			FRotator::ZeroRotator,
-			EAttachLocation::SnapToTarget,
-			false);
+
+		USceneComponent* TargetMesh = Cast<USceneComponent>(TargetActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+		if (TargetMesh)
+			ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
+				ParticleEffect,
+				TargetMesh,
+				NameBoneToAttached,
+				Location,
+				FRotator::ZeroRotator,
+				EAttachLocation::SnapToTarget,
+				false);
+		else
+		{
+			ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
+				ParticleEffect,
+				TargetActor->GetRootComponent(),
+				NameBoneToAttached,
+				Location,
+				FRotator::ZeroRotator,
+				EAttachLocation::SnapToTarget,
+				false);
+		}
 	}
 
 	return true;
@@ -105,10 +119,10 @@ void UStateEffect_Timer::DestroyObject()
 
 void UStateEffect_Timer::Execute()
 {
-	if (MyActor)
+	if (TargetActor)
 	{
 		UHealthComponent* MyHealthComponent = Cast<UHealthComponent>(
-	MyActor->GetComponentByClass(UHealthComponent::StaticClass()));
+	TargetActor->GetComponentByClass(UHealthComponent::StaticClass()));
 
 		if (MyHealthComponent)
 		{

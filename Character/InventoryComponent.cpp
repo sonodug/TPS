@@ -474,3 +474,32 @@ bool UInventoryComponent::CheckAmmoForWeapon(EWeaponType WeaponType, int8 &Avail
 	OnWeaponAmmoExpired.Broadcast(WeaponType);
 	return false;
 }
+
+void UInventoryComponent::InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo)
+{
+	WeaponSlots = NewWeaponSlotsInfo;
+	AmmoSlots = NewAmmoSlotsInfo;
+	//Find init weaponsSlots and First Init Weapon
+	for (int8 i = 0; i < WeaponSlots.Num(); i++)
+	{
+		UGameInstance* myGI = Cast<UGameInstance>(GetWorld()->GetGameInstance());
+		if (myGI)
+		{
+			if (!WeaponSlots[i].ItemName.IsNone())
+			{
+				//FWeaponInfo Info;
+				//if (myGI->GetWeaponInfoByName(WeaponSlots[i].NameItem, Info))
+				//WeaponSlots[i].AdditionalInfo.Round = Info.MaxRound;
+			}
+
+		}
+	}
+
+	MaxWeaponSlots = WeaponSlots.Num();
+
+	if (WeaponSlots.IsValidIndex(0))
+	{
+		if (!WeaponSlots[0].ItemName.IsNone())
+			OnSwitchWeapon.Broadcast(WeaponSlots[0].ItemName, WeaponSlots[0].AdditionalWeaponInfo);
+	}
+}

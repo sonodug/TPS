@@ -424,7 +424,7 @@ void ATPSCharacter::TryAbilityEnabled()
 	{
 		UStateEffect* NewEffect = NewObject<UStateEffect>(this, AbilityEffect);
 		if (NewEffect)
-			NewEffect->InitObject(this);
+			NewEffect->InitObject(this, NAME_None);
 	}
 }
 
@@ -506,6 +506,8 @@ void ATPSCharacter::Dead()
 	//Ragdoll
 	GetWorldTimerManager().SetTimer(RagdollTimerHandle, this, &ATPSCharacter::EnableRagdoll, AnimRate - 0.1f, false);
 	GetCursorToWorld()->SetVisibility(false);
+
+	AttackCharEvent(false);
 	CharDead_BP();
 }
 
@@ -523,6 +525,8 @@ float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 {
 	if (bIsAlive)
 		CharacterHealthComponent->ChangeHealthValue(-DamageAmount);
+
+	//AddEffectBySurfaceType (Radial Damage) by grenade launcher selfharm
 	
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }

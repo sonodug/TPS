@@ -16,7 +16,7 @@ class TPS_API UStateEffect : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual bool InitObject(AActor* Actor);
+	virtual bool InitObject(AActor* Actor, FName NameBoneHit);
 	virtual void DestroyObject();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
@@ -24,7 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
 	bool bCanStack = false;
 	
-	AActor* MyActor = nullptr;
+	AActor* TargetActor = nullptr;
 };
 
 UCLASS()
@@ -32,7 +32,7 @@ class TPS_API UStateEffect_Single : public UStateEffect
 {
 	GENERATED_BODY()
 public:
-	virtual bool InitObject(AActor* Actor) override;
+	virtual bool InitObject(AActor* Actor, FName NameBoneHit) override;
 	virtual void DestroyObject() override;
 
 	virtual void ExecuteOnce();
@@ -46,7 +46,7 @@ class TPS_API UStateEffect_Timer : public UStateEffect
 {
 	GENERATED_BODY()
 public:
-	virtual bool InitObject(AActor* Actor) override;
+	virtual bool InitObject(AActor* Actor, FName NameBoneHit) override;
 	virtual void DestroyObject() override;
 
 	virtual void Execute();

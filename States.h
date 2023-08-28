@@ -138,7 +138,7 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	float ReloadTime = 2.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
-	int32 MaxMagazineCapacity = 10;
+	int32 MaxMagazineCapacity = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	int32 NumberProjectileByShot = 1;
 
@@ -228,5 +228,5 @@ class TPS_API UStates : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintCallable)
-	static void AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, EPhysicalSurface SurfaceType, AActor* HitActor);
+	static void AddEffectBySurfaceType(TSubclassOf<UStateEffect> Effect, FName NameBoneHit, EPhysicalSurface SurfaceType, AActor* HitActor);
 };
