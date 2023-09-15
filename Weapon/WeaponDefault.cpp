@@ -4,6 +4,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "TPS/StateEffects/StateEffect.h"
 #include "TPS/Character/InventoryComponent.h"
@@ -14,6 +15,7 @@ AWeaponDefault::AWeaponDefault()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	SetReplicates(true);
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
 	RootComponent = SceneComponent;
@@ -51,9 +53,12 @@ void AWeaponDefault::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FireTick(DeltaTime);
-	ReloadTick(DeltaTime);
-	DispersionTick(DeltaTime);
+	if (HasAuthority())
+	{
+		FireTick(DeltaTime);
+		ReloadTick(DeltaTime);
+		DispersionTick(DeltaTime);
+	}
 }
 
 void AWeaponDefault::FireTick(float DeltaTime)
@@ -135,16 +140,16 @@ void AWeaponDefault::WeaponInit()
 		StaticMeshWeapon->DestroyComponent();
 	}
 	
-	UpdateStateWeapon(EMovementState::WalkState);
+	UpdateStateWeapon_OnServer(EMovementState::WalkState);
 }
 
-void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
+void AWeaponDefault::SetWeaponStateFire_OnServer_Implementation(bool bIsFire)
 {
 	if (CheckWeaponCanFire())
 		WeaponFiring = bIsFire;
 	else
 		WeaponFiring = false;
-		FireTimer = 0.01f;
+	FireTimer = 0.01f;
 }
 
 bool AWeaponDefault::CheckWeaponCanFire()
@@ -163,12 +168,14 @@ void AWeaponDefault::Fire()
 	AdditionalWeaponInfo.MagazineCapacity = AdditionalWeaponInfo.MagazineCapacity - 1;
 	ChangeDispersionByShot();
 	
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
+	WeaponFireFX_Multicast(WeaponSetting.EffectFireWeapon, WeaponSetting.SoundFireWeapon);
 	
 	//This is fragment shouldn't be here
 	if(WeaponSetting.AnimFireHip && WeaponSetting.AnimFireIronsight)
+	{
 		OnWeaponFireStart.Broadcast(WeaponSetting.AnimFireHip, WeaponSetting.AnimFireIronsight);
+		//AnimWeaponFire_Multicast(WeaponSetting.AnimFireIronsight);
+	}
 	
 	int8 NumberProjectile = GetNumberProjectileByShot();
 	
@@ -240,6 +247,7 @@ void AWeaponDefault::Fire()
 			}
 			else
 			{
+				//Multicast trace
 				FHitResult Hit;
 				TArray<AActor*> Actors;				
 
@@ -297,7 +305,7 @@ void AWeaponDefault::Fire()
 	}
 }
 
-void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
+void AWeaponDefault::UpdateStateWeapon_OnServer_Implementation(EMovementState NewMovementState)
 {
 	//ToDo Dispersion
 	BlockFire = false;
@@ -334,7 +342,7 @@ void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
 		break;
 	case EMovementState::RunState:
 		BlockFire = true;
-		SetWeaponStateFire(false);//set fire trigger to false
+		SetWeaponStateFire_OnServer(false);//set fire trigger to false
 		//Block Fire
 		break;
 	default:
@@ -405,6 +413,7 @@ int32 AWeaponDefault::GetWeaponMagazine()
 
 void AWeaponDefault::InitReload()
 {
+	//On server
 	WeaponReloading = true;
 	
 	ReloadTimer = WeaponSetting.ReloadTime;
@@ -510,4 +519,47 @@ int8 AWeaponDefault::GetAvailableAmmoForReload()
 	}
 
 	return ResultAmmo;
+}
+
+void AWeaponDefault::WeaponFireFX_Multicast_Implementation(UParticleSystem* FireFX, USoundBase* SoundFire)
+{
+	if (SoundFire)
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), SoundFire, ShootLocation->GetComponentLocation());
+	
+	if (FireFX)
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireFX, ShootLocation->GetComponentTransform());
+}
+
+void AWeaponDefault::MagazineDropReload_Multicast_Implementation()
+{
+	//pohui
+}
+
+void AWeaponDefault::ShellDropFire_Multicast_Implementation()
+{
+	//pohui
+}
+
+void AWeaponDefault::AnimWeaponReload_Multicast_Implementation(UAnimMontage* AnimReload)
+{
+	//this logic in BP (rework)
+}
+
+void AWeaponDefault::AnimWeaponFire_Multicast_Implementation(UAnimMontage* AnimFire)
+{
+	//this logic in BP (rework)
+}
+
+void AWeaponDefault::UpdateWeaponByCharacterMovementState_OnServer_Implementation(FVector NewShootEndLocation, bool NewShouldReduceDispersion)
+{
+	ShootEndLocation = NewShootEndLocation;
+	ShouldReduceDispersion = NewShouldReduceDispersion;
+}
+
+void AWeaponDefault::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AWeaponDefault, AdditionalWeaponInfo);
+	DOREPLIFETIME(AWeaponDefault, ShootEndLocation);
+	DOREPLIFETIME(AWeaponDefault, WeaponReloading);
 }

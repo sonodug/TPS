@@ -61,7 +61,7 @@ public:
 	FVector CursorSize = FVector(20.f, 40.f, 20.f);
 
 	//Movement
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+	UPROPERTY(Replicated)
 	EMovementState MovementState = EMovementState::WalkState; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement") 
@@ -81,12 +81,18 @@ public:
 	TArray<UAnimMontage*> DeadAnimMontages;
 
 	//Effects
+	UPROPERTY(Replicated)
 	TArray<UStateEffect*> Effects;
-
+	UPROPERTY(ReplicatedUsing=EffectAdd_OnRep)
+	UStateEffect* AddedEffect = nullptr;
+	UPROPERTY(ReplicatedUsing=EffectRemove_OnRep)
+	UStateEffect* RemovedEffect = nullptr;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AblilityEffect")
 	TSubclassOf<UStateEffect> AbilityEffect;
 	 
-	//Weapon	
+	//Weapon
+	UPROPERTY(Replicated)
 	AWeaponDefault* CurrentWeapon = nullptr;
 	int32 CurrentWeaponIndex = 0;
 
@@ -124,6 +130,8 @@ public:
 	void CharacterUpdate();
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementState();
+	UFUNCTION()
+	EMovementState GetMovementState();
 
 	UFUNCTION(BlueprintCallable)
 	AWeaponDefault* GetCurrentWeapon();
@@ -157,6 +165,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool GetAliveState();
 
 	// BlueprintCallable macros parameter - default
 	UFUNCTION(BlueprintCallable)
@@ -169,5 +179,21 @@ public:
 	virtual TArray<UStateEffect*> GetAllCurrentEffects() override;
 	virtual void AddEffect(UStateEffect* Effect) override;
 	virtual void RemoveEffect(UStateEffect* Effect) override;
+
+	UFUNCTION(Server, Unreliable)
+	void SetActorRotationByYaw_OnServer(float Yaw);
+	UFUNCTION(NetMulticast, Unreliable)
+	void SetActorRotationByYaw_Multicast(float Yaw);
+	UFUNCTION(Server, Reliable)
+	void SetMovementState_OnServer(EMovementState NewState);
+	UFUNCTION(NetMulticast, Reliable)
+	void SetMovementState_Multicast(EMovementState NewState);
+	UFUNCTION(Server, Reliable)
+	void TryReloadWeapon_OnServer();
+
+	UFUNCTION()
+	void EffectAdd_OnRep();
+	UFUNCTION()
+	void EffectRemove_OnRep();
 };
 

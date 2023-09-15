@@ -62,7 +62,7 @@ void UStateEffect_Single::ExecuteOnce()
 
 		if (MyHealthComponent)
 		{
-			MyHealthComponent->ChangeHealthValue(Power);
+			MyHealthComponent->ChangeHealthValue_OnServer(Power);
 		}	
 	}
 	
@@ -76,8 +76,12 @@ bool UStateEffect_Timer::InitObject(AActor* Actor, FName NameBoneHit)
 	UE_LOG(LogTemp, Warning, TEXT("UStateEffect_Timer"));
 
 	Super::InitObject(Actor, NameBoneHit);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UStateEffect_Timer::DestroyObject, Timer, false);
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UStateEffect_Timer::Execute, RateTime, true);
+
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_EffectTimer, this, &UStateEffect_Timer::DestroyObject, Timer, false);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UStateEffect_Timer::Execute, RateTime, true);
+	}
 
 	if (ParticleEffect)
 	{
@@ -112,6 +116,11 @@ bool UStateEffect_Timer::InitObject(AActor* Actor, FName NameBoneHit)
 
 void UStateEffect_Timer::DestroyObject()
 {
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	}
+	
 	ParticleEmitter->DestroyComponent();
 	ParticleEmitter = nullptr;
 	Super::DestroyObject();
@@ -126,7 +135,7 @@ void UStateEffect_Timer::Execute()
 
 		if (MyHealthComponent)
 		{
-			MyHealthComponent->ChangeHealthValue(Power);
+			MyHealthComponent->ChangeHealthValue_OnServer(Power);
 		}	
 	}
 }

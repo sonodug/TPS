@@ -36,9 +36,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapons");
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category="Weapons");
 	TArray<FWeaponSlot> WeaponSlots;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapons");
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category="Weapons");
 	TArray<FAmmoSlot> AmmoSlots;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapons");
 	int32 MaxWeaponSlots = 0;
@@ -52,6 +52,9 @@ public:
 	void WeaponChangeAmmo(EWeaponType WeaponType, int32 AmmoToTake);
 	bool CheckAmmoForWeapon(EWeaponType WeaponType, int8 &AvailableAmmoForWeapon);
 	
-	UFUNCTION(BlueprintCallable, Category = "Inv")
-	void InitInventory(TArray<FWeaponSlot> NewWeaponSlotsInfo, TArray<FAmmoSlot> NewAmmoSlotsInfo);
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Inv")
+	void InitInventory_OnServer(const TArray<FWeaponSlot>& NewWeaponSlotsInfo, const TArray<FAmmoSlot>& NewAmmoSlotsInfo);
+
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, Category = "Inv")
+	void AmmoChangedEvent_Multicast(EWeaponType WeaponType, int32 Count);
 };

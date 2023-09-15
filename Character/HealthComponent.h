@@ -34,7 +34,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Health")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category="Health")
 	float Health = 400.0f;
 public:	
 	// Called every frame
@@ -47,8 +47,13 @@ public:
 	float GetCurrentHealth();
 	UFUNCTION(BlueprintCallable, Category="Heath")
 	void SetCurrentHealth(float NewHealth);
-	UFUNCTION(BlueprintCallable, Category="Heath")
-	virtual void ChangeHealthValue(float Value);
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Heath")
+	virtual void ChangeHealthValue_OnServer(float Value);
 	UFUNCTION(BlueprintNativeEvent)
 	void Dead();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void HealthChangedEvent_Multicast(float HealthValue, float Value);
+	UFUNCTION(NetMulticast, Reliable)
+	void DeadEvent_Multicast();
 };

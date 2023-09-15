@@ -3,7 +3,7 @@
 
 #include "../Character/CharacterHealthComponent.h"
 
-void UCharacterHealthComponent::ChangeHealthValue(float ChangeValue)
+void UCharacterHealthComponent::ChangeHealthValue_OnServer(float ChangeValue)
 {
 	float CurrentDamage = ChangeValue * CoefDamage;
 
@@ -19,7 +19,7 @@ void UCharacterHealthComponent::ChangeHealthValue(float ChangeValue)
 	}
 	else
 	{
-		Super::ChangeHealthValue(ChangeValue);
+		Super::ChangeHealthValue_OnServer(ChangeValue);
 	}
 }
 
@@ -31,7 +31,7 @@ float UCharacterHealthComponent::GetCurrentShield()
 void UCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 {
 	Shield += ChangeValue;
-	OnShieldChanged.Broadcast(Shield, ChangeValue);
+	ShieldChangedEvent_Multicast(Shield, ChangeValue);
 
 	if (Shield > 100.0f)
 	{
@@ -82,4 +82,9 @@ void UCharacterHealthComponent::RecoveryShield()
 float UCharacterHealthComponent::GetShieldValue()
 {
 	return Shield;
+}
+
+void UCharacterHealthComponent::ShieldChangedEvent_Multicast_Implementation(float ShieldValue, float Damage)
+{
+	OnShieldChanged.Broadcast(ShieldValue, Damage);
 }

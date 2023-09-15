@@ -19,7 +19,9 @@
 #include "../Game/WeaponGameInstance.h"
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+#include "TPS/TPS.h"
 
 #define START_SPEED 300.f;
 
@@ -75,6 +77,8 @@ ATPSCharacter::ATPSCharacter()
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
+
+	bReplicates = true;
 }
 
 void ATPSCharacter::Tick(float DeltaSeconds)
@@ -112,7 +116,7 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
-		if (PlayerController)
+		if (PlayerController && PlayerController->IsLocalPlayerController())
 		{
 			FHitResult TraceHitResult;
 			PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
@@ -181,58 +185,71 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 {
 	if (bIsAlive)
 	{
-		AddMovementInput(FVector(1.f, 0, 0), AxisX);
-		AddMovementInput(FVector(0, 1.f, 0), AxisY);
-		
-		if (MovementState == EMovementState::RunState)
+		if (GetController() && GetController()->IsLocalPlayerController())
 		{
-			FVector RotationVector = FVector(AxisX,AxisY,0.0f);
-			FRotator Rotator = RotationVector.ToOrientationRotator();
-			SetActorRotation((FQuat(Rotator)));
-		}
-		else
-		{
-			APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-			if (MyController)
-			{
-				FHitResult ResultHit;
-				//myController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);// bug was here Config\DefaultEngine.Ini
-				MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
+			AddMovementInput(FVector(1.f, 0, 0), AxisX);
+            AddMovementInput(FVector(0, 1.f, 0), AxisY);
 
-				float FindRotaterResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
-				SetActorRotation(FQuat(FRotator(0.0f, FindRotaterResultYaw, 0.0f)));
+			FString Enum = UEnum::GetValueAsString(GetMovementState());
+			UE_LOG(LogTPS_Net, Warning, TEXT("Movement state - %s"), *Enum);
+			
+            if (MovementState == EMovementState::RunState)
+            {
+            	FVector RotationVector = FVector(AxisX,AxisY,0.0f);
+            	FRotator Rotator = RotationVector.ToOrientationRotator();
+            	SetActorRotation((FQuat(Rotator)));
 
-				if (CurrentWeapon)
-				{
-					FVector Displacement = FVector(0);
-					switch (MovementState)
-					{
-					case EMovementState::AimState:
-						Displacement = FVector(0.0f, 0.0f, 160.0f);
-						CurrentWeapon->ShouldReduceDispersion = true;
-						break;
-					case EMovementState::AimCrouchState:
-						CurrentWeapon->ShouldReduceDispersion = true;
-						Displacement = FVector(0.0f, 0.0f, 160.0f);
-						break;
-					case EMovementState::CrouchState:
-						Displacement = FVector(0.0f, 0.0f, 120.0f);
-						CurrentWeapon->ShouldReduceDispersion = false;
-						break;
-					case EMovementState::WalkState:
-						Displacement = FVector(0.0f, 0.0f, 120.0f);
-						CurrentWeapon->ShouldReduceDispersion = false;
-						break;
-					case EMovementState::RunState:
-						break;
-					default:
-						break;
-					}
-					
-					CurrentWeapon->ShootEndLocation = ResultHit.Location + Displacement;
-					//aim cursor like 3d Widget?
-				}
-			}
+            	//server -> multicast -> variable is replicated -> therefore state updated to all
+            	SetActorRotationByYaw_OnServer(Rotator.Yaw);
+            }
+            else
+            {
+            	APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+            	if (MyController)
+            	{
+            		FHitResult ResultHit;
+            		//myController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);// bug was here Config\DefaultEngine.Ini
+            		MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
+    
+            		float FindRotaterResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
+            		SetActorRotation(FQuat(FRotator(0.0f, FindRotaterResultYaw, 0.0f)));
+					SetActorRotationByYaw_OnServer(FindRotaterResultYaw);
+            		
+            		if (CurrentWeapon)
+            		{
+            			FVector Displacement = FVector(0);
+            			bool bShouldReduce = false;
+            			switch (MovementState)
+            			{
+            			case EMovementState::AimState:
+            				Displacement = FVector(0.0f, 0.0f, 160.0f);
+            				CurrentWeapon->ShouldReduceDispersion = true;
+            				break;
+            			case EMovementState::AimCrouchState:
+            				CurrentWeapon->ShouldReduceDispersion = true;
+            				Displacement = FVector(0.0f, 0.0f, 160.0f);
+            				break;
+            			case EMovementState::CrouchState:
+            				Displacement = FVector(0.0f, 0.0f, 120.0f);
+            				CurrentWeapon->ShouldReduceDispersion = false;
+            				break;
+            			case EMovementState::WalkState:
+            				Displacement = FVector(0.0f, 0.0f, 120.0f);
+            				CurrentWeapon->ShouldReduceDispersion = false;
+            				break;
+            			case EMovementState::RunState:
+            				break;
+            			default:
+            				break;
+            			}
+            			
+            			CurrentWeapon->UpdateWeaponByCharacterMovementState_OnServer(
+            				ResultHit.Location + Displacement, bShouldReduce);
+            			
+            			//aim cursor like 3d Widget?
+            		}
+            	}
+            }
 		}
 	}
 }
@@ -244,7 +261,7 @@ void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 	if (Weapon)
 	{
 		//ToDo Check melee or range
-		Weapon->SetWeaponStateFire(bIsFiring);
+		Weapon->SetWeaponStateFire_OnServer(bIsFiring);
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
@@ -280,35 +297,42 @@ void ATPSCharacter::CharacterUpdate()
 
 void ATPSCharacter::ChangeMovementState()
 {
+	EMovementState NewState = EMovementState::WalkState;
+	
 	if (!CrouchEnabled && !RunEnabled && !AimEnabled)
-		MovementState = EMovementState::WalkState;
+		NewState = EMovementState::WalkState;
 	else if (RunEnabled)
 	{
 		CrouchEnabled = false;
 		AimEnabled = false;
-		MovementState = EMovementState::RunState;
+		NewState = EMovementState::RunState;
 	}
 	else if (CrouchEnabled && !RunEnabled && AimEnabled)
 	{
-		MovementState = EMovementState::AimCrouchState;
+		NewState = EMovementState::AimCrouchState;
 	}
 	else if (CrouchEnabled && !RunEnabled && !AimEnabled)
 	{
-		MovementState = EMovementState::CrouchState;
+		NewState = EMovementState::CrouchState;
 	}
 	else if (!CrouchEnabled && !RunEnabled && AimEnabled)
 	{
-		MovementState = EMovementState::AimState;
+		NewState = EMovementState::AimState;
 	}
-	
-	CharacterUpdate();
+
+	SetMovementState_OnServer(NewState);
 
 	//Weapon state update
 	AWeaponDefault* MyCurrentWeapon = GetCurrentWeapon();
 	if (MyCurrentWeapon)
 	{
-		MyCurrentWeapon->UpdateStateWeapon(MovementState);
+		MyCurrentWeapon->UpdateStateWeapon_OnServer(NewState);
 	}
+}
+
+EMovementState ATPSCharacter::GetMovementState()
+{
+	return MovementState;
 }
 
 AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
@@ -318,6 +342,7 @@ AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 
 void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo)
 {
+	//OnServer
 	if (CurrentWeapon)
 	{
 		CurrentWeapon->Destroy();
@@ -352,7 +377,7 @@ void ATPSCharacter::InitWeapon(FName WeaponName, FAdditionalWeaponInfo WeaponAdd
 					MyWeapon->AdditionalWeaponInfo.MagazineCapacity = WeaponInfo.MaxMagazineCapacity;
 					//Remove !!! Debug
 					MyWeapon->ReloadTime = WeaponInfo.ReloadTime;
-					MyWeapon->UpdateStateWeapon(MovementState);
+					MyWeapon->UpdateStateWeapon_OnServer(MovementState);
 
 					MyWeapon->AdditionalWeaponInfo = WeaponAdditionalInfo;
 					if (InventoryComponent)
@@ -432,8 +457,7 @@ void ATPSCharacter::TryReloadWeapon()
 {
 	if (bIsAlive && CurrentWeapon && !CurrentWeapon->WeaponReloading)
 	{
-		if (CurrentWeapon->GetWeaponMagazine() < CurrentWeapon->WeaponSetting.MaxMagazineCapacity && CurrentWeapon->CheckCanWeaponReload())
-			CurrentWeapon->InitReload();
+		TryReloadWeapon_OnServer();
 	}
 }
 
@@ -487,6 +511,11 @@ UDecalComponent* ATPSCharacter::GetCursorToWorld()
 	return CurrentCursor;
 }
 
+bool ATPSCharacter::GetAliveState()
+{
+	return bIsAlive;
+}
+
 void ATPSCharacter::Dead()
 {
 	int32 RandomAnimNumber = FMath::RandHelper(DeadAnimMontages.Num());
@@ -524,7 +553,7 @@ float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
                                 AActor* DamageCauser)
 {
 	if (bIsAlive)
-		CharacterHealthComponent->ChangeHealthValue(-DamageAmount);
+		CharacterHealthComponent->ChangeHealthValue_OnServer(-DamageAmount);
 
 	//AddEffectBySurfaceType (Radial Damage) by grenade launcher selfharm
 	
@@ -565,3 +594,44 @@ void ATPSCharacter::RemoveEffect(UStateEffect* Effect)
 {
 	Effects.Remove(Effect);
 }
+
+void ATPSCharacter::TryReloadWeapon_OnServer_Implementation()
+{
+	if (CurrentWeapon->GetWeaponMagazine() < CurrentWeapon->WeaponSetting.MaxMagazineCapacity && CurrentWeapon->CheckCanWeaponReload())
+		CurrentWeapon->InitReload();
+}
+
+void ATPSCharacter::SetMovementState_OnServer_Implementation(EMovementState NewState)
+{
+	SetMovementState_Multicast(NewState);
+}
+
+void ATPSCharacter::SetMovementState_Multicast_Implementation(EMovementState NewState)
+{
+	MovementState = NewState;
+	CharacterUpdate();
+}
+
+void ATPSCharacter::SetActorRotationByYaw_OnServer_Implementation(float Yaw)
+{
+	SetActorRotationByYaw_Multicast(Yaw);
+}
+
+void ATPSCharacter::SetActorRotationByYaw_Multicast_Implementation(float Yaw)
+{
+	//SetActorRotation(FQuat(FRotator(0.0f, Yaw, 0.0f)));
+	if (Controller && !Controller->IsLocalPlayerController())
+	{
+		SetActorRotation(FQuat(FRotator(0.0f, Yaw, 0.0f)));
+	}
+}
+
+void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	// should be replicated
+	DOREPLIFETIME(ATPSCharacter, MovementState);
+	DOREPLIFETIME(ATPSCharacter, CurrentWeapon);
+}
+
+

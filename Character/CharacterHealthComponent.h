@@ -34,7 +34,7 @@ protected:
 	float Shield = 100.0f;
 
 public:
-	virtual void ChangeHealthValue(float Value) override;
+	virtual void ChangeHealthValue_OnServer(float Value) override;
 	float GetCurrentShield();
 	void ChangeShieldValue(float Value);
 	void CoolDownShieldEnd();
@@ -42,4 +42,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	float GetShieldValue();
+	UFUNCTION(NetMulticast, Reliable)
+	void ShieldChangedEvent_Multicast(float ShieldValue, float Damage);
 };

@@ -42,7 +42,7 @@ public:
 
 	UPROPERTY()
 	FWeaponInfo WeaponSetting;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
 	FAdditionalWeaponInfo AdditionalWeaponInfo;
 
 protected:
@@ -61,11 +61,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireLogic")
 	bool WeaponFiring = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic")
+	
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic")
 	bool WeaponReloading = false;
 
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponStateFire(bool bIsFire);
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void SetWeaponStateFire_OnServer(bool bIsFire);
 
 	bool CheckWeaponCanFire();
 
@@ -73,7 +74,9 @@ public:
 
 	void Fire();
 
-	void UpdateStateWeapon(EMovementState NewMovementState);
+	UFUNCTION(Server, Reliable)
+	void UpdateStateWeapon_OnServer(EMovementState NewMovementState);
+	
 	void ChangeDispersionByShot();
 	float GetCurrentDispersion() const;
 	FVector ApplyDispersionToShoot(FVector DirectionShoot) const;
@@ -100,6 +103,7 @@ public:
 	float CurrentDispersionRecoil = 0.1f;
 	float CurrentDispersionReduction = 0.1f;
 
+	UPROPERTY(Replicated)
 	FVector ShootEndLocation = FVector(0);
 
 	UFUNCTION(BlueprintCallable)
@@ -116,4 +120,17 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	float SizeVectorToChangeShootDirectionLogic = 100.0f;
+
+	UFUNCTION(Server, Unreliable)
+	void UpdateWeaponByCharacterMovementState_OnServer(FVector NewShootEndLocation, bool NewShouldReduceDispersion);
+	UFUNCTION(NetMulticast, Unreliable)
+	void AnimWeaponFire_Multicast(UAnimMontage* AnimFire);
+	UFUNCTION(NetMulticast, Unreliable)
+	void AnimWeaponReload_Multicast(UAnimMontage* AnimReload);
+	UFUNCTION(NetMulticast, Unreliable)
+	void ShellDropFire_Multicast();
+	UFUNCTION(NetMulticast, Unreliable)
+	void MagazineDropReload_Multicast();
+	UFUNCTION(NetMulticast, Unreliable)
+	void WeaponFireFX_Multicast(UParticleSystem* FireFX, USoundBase* SoundFire);
 };

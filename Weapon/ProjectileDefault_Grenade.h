@@ -30,7 +30,10 @@ public:
 
 	void Explose();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Granade")
 	bool TimerEnabled = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Granade")
 	float TimerToExplose = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Granade")
 	float TimeToExplose = 5.0f;
 };
