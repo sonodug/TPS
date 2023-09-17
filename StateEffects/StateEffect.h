@@ -23,8 +23,11 @@ public:
 	TArray<TEnumAsByte<EPhysicalSurface>> InteractableSurfaces;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
 	bool bCanStack = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings")
+	UParticleSystem* ParticleEffect = nullptr;
 	
 	AActor* TargetActor = nullptr;
+	FName BoneName;
 };
 
 UCLASS()
@@ -57,8 +60,6 @@ public:
 	float Timer = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings TimerEffect")
 	float RateTime = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Settings TimerEffect")
-	UParticleSystem* ParticleEffect = nullptr;
 
 	UParticleSystemComponent* ParticleEmitter = nullptr;
 	

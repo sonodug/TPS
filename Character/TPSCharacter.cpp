@@ -588,11 +588,74 @@ TArray<UStateEffect*> ATPSCharacter::GetAllCurrentEffects()
 void ATPSCharacter::AddEffect(UStateEffect* Effect)
 {
 	Effects.Add(Effect);
+	SwitchEffect(AddedEffect, true);
+	AddedEffect = Effect;
 }
 
 void ATPSCharacter::RemoveEffect(UStateEffect* Effect)
 {
 	Effects.Remove(Effect);
+	SwitchEffect(RemovedEffect, false);
+	RemovedEffect = Effect;
+}
+
+void ATPSCharacter::EffectAdd_OnRep()
+{
+	if (AddedEffect)
+	{
+		SwitchEffect(AddedEffect, true);
+	}
+}
+
+void ATPSCharacter::EffectRemove_OnRep()
+{
+	if (RemovedEffect)
+	{
+		SwitchEffect(RemovedEffect, true);	
+	}
+}
+
+void ATPSCharacter::SwitchEffect(UStateEffect* Effect, bool bIsCanAdded)
+{
+	if (bIsCanAdded)
+	{
+		if (Effect && Effect->ParticleEffect)
+		{
+			FName NameBoneToAttached = Effect->BoneName;
+			FVector Location = FVector(0);
+			USkeletalMeshComponent* myMesh = GetMesh();
+			
+			if (myMesh)
+			{
+				UParticleSystemComponent* newParticleComp = UGameplayStatics::SpawnEmitterAttached(
+					Effect->ParticleEffect,
+					myMesh,
+					NameBoneToAttached,
+					Location,
+					FRotator::ZeroRotator,
+					EAttachLocation::SnapToTarget,
+					false);
+				
+				ParticleSystemEffects.Add(newParticleComp);
+			}
+		}		
+	}
+	else
+	{
+		int32 i = 0;
+		bool bIsFind = false;
+		while (i < ParticleSystemEffects.Num(), !bIsFind)
+		{
+			if (ParticleSystemEffects[i]->Template && Effect->ParticleEffect && Effect->ParticleEffect == ParticleSystemEffects[i]->Template)
+			{
+				bIsFind = true;
+				ParticleSystemEffects[i]->DeactivateSystem();
+				ParticleSystemEffects[i]->DestroyComponent();
+				ParticleSystemEffects.RemoveAt(i);
+			}
+			i++;
+		}
+	}
 }
 
 void ATPSCharacter::TryReloadWeapon_OnServer_Implementation()
@@ -632,6 +695,9 @@ void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	// should be replicated
 	DOREPLIFETIME(ATPSCharacter, MovementState);
 	DOREPLIFETIME(ATPSCharacter, CurrentWeapon);
+	DOREPLIFETIME(ATPSCharacter, AddedEffect);
+	DOREPLIFETIME(ATPSCharacter, RemovedEffect);
+	DOREPLIFETIME(ATPSCharacter, Effects);
 }
 
 

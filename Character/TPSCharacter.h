@@ -107,6 +107,9 @@ public:
 	
 	UDecalComponent* CurrentCursor = nullptr;
  
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Debug")
+	TArray<UParticleSystemComponent*> ParticleSystemEffects;
+	
 	//InputHandlers
 	UFUNCTION()
 	void InputAxisX(float Value);
@@ -195,5 +198,7 @@ public:
 	void EffectAdd_OnRep();
 	UFUNCTION()
 	void EffectRemove_OnRep();
+	UFUNCTION()
+	void SwitchEffect(UStateEffect* Effect, bool bIsCanAdded);
 };
 

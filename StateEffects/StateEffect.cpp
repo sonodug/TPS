@@ -12,6 +12,7 @@ bool UStateEffect::InitObject(AActor* Actor, FName NameBoneHit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("BaseSE"));
 	TargetActor = Actor;
+	BoneName = NameBoneHit;
 	
 	IGameActor* myInterface = Cast<IGameActor>(TargetActor);
 
@@ -83,33 +84,33 @@ bool UStateEffect_Timer::InitObject(AActor* Actor, FName NameBoneHit)
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle_ExecuteTimer, this, &UStateEffect_Timer::Execute, RateTime, true);
 	}
 
-	if (ParticleEffect)
-	{
-		FName NameBoneToAttached = NameBoneHit;
-		FVector Location = FVector(0);
-
-		USceneComponent* TargetMesh = Cast<USceneComponent>(TargetActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
-		if (TargetMesh)
-			ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
-				ParticleEffect,
-				TargetMesh,
-				NameBoneToAttached,
-				Location,
-				FRotator::ZeroRotator,
-				EAttachLocation::SnapToTarget,
-				false);
-		else
-		{
-			ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
-				ParticleEffect,
-				TargetActor->GetRootComponent(),
-				NameBoneToAttached,
-				Location,
-				FRotator::ZeroRotator,
-				EAttachLocation::SnapToTarget,
-				false);
-		}
-	}
+	// if (ParticleEffect)
+	// {
+	// 	FName NameBoneToAttached = NameBoneHit;
+	// 	FVector Location = FVector(0);
+	//
+	// 	USceneComponent* TargetMesh = Cast<USceneComponent>(TargetActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+	// 	if (TargetMesh)
+	// 		ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
+	// 			ParticleEffect,
+	// 			TargetMesh,
+	// 			NameBoneToAttached,
+	// 			Location,
+	// 			FRotator::ZeroRotator,
+	// 			EAttachLocation::SnapToTarget,
+	// 			false);
+	// 	else
+	// 	{
+	// 		ParticleEmitter = UGameplayStatics::SpawnEmitterAttached(
+	// 			ParticleEffect,
+	// 			TargetActor->GetRootComponent(),
+	// 			NameBoneToAttached,
+	// 			Location,
+	// 			FRotator::ZeroRotator,
+	// 			EAttachLocation::SnapToTarget,
+	// 			false);
+	// 	}
+	// }
 
 	return true;
 }
@@ -121,8 +122,8 @@ void UStateEffect_Timer::DestroyObject()
 		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 	}
 	
-	ParticleEmitter->DestroyComponent();
-	ParticleEmitter = nullptr;
+	// ParticleEmitter->DestroyComponent();
+	// ParticleEmitter = nullptr;
 	Super::DestroyObject();
 }
 
